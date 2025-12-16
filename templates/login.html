@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>推し活アプリ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <form method="post" id="loginForm">
+        <input name="username" type="username" placeholder="ユーザー名">
+        <input name="password" type="password" placeholder="パスワード">
+        <button type="submit">ログイン</button>
+    </form>
+    <div id="error" style="color: red; margin-top: 10px;"></div>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Noto+Sans+JP');
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 100px;
+            background-color: #F3F4F6;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            width: 500px;
+            margin: auto auto;
+        }
+        input, button {
+            padding: 0.5em;
+            margin: 0.3em 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button{
+            color: white;
+            background-color: #FF4081;
+        }
+        #error {
+            font-size: 14px;
+            text-align: center;
+
+        }   
+    </style>
+    <script>
+        console.log("AJAX loaded"); 
+        $(function(){
+            $("#loginForm").on("submit", function(event){
+                event.preventDefault();
+
+                const formData = $(this).serialize(); //シリアライズでフォームのデータを取得
+
+                $.ajax({
+                    type: "POST",
+                    url: "/login",
+                    data: formData,
+                    dataType: "json",
+                    success: function(response){
+                        if(response.status === "success"){
+                            window.location.href = "/"; 
+                        } else {
+                            $("#error").text(response.message); 
+                        }
+                    },
+                    error:function(){
+                        $("#error").text("サーバーエラーが発生しました");
+                    }
+                })
+            })
+        })
+    </script>
+</body>

@@ -1,0 +1,43 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+*.manifest
+*.spec
+
+# 仮想環境
+venv/
+env/
+.venv/
+
+# データベース
+*.db
+*.sqlite3
+
+# もろもろ
+uploaded.png
+uploads/
+instance/
+*.log
+
+# mac
+.DS_Store
+
+# windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+#個人のIDE設定
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+*.bak
+*.swp

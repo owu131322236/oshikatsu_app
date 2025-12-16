@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css?family=Noto+Sans+JP');
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #F3F4F6;
+    color: #333;
+}
+
+h1, h2, h3 {
+    margin: 0;
+    /* padding: 0.5em 0; */
+}
+
+/* ===== ヘッダー ===== */
+header {
+    background-color: white;
+    color: black;
+    padding: 0.5em 1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#logo-section{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#logo{
+    display: flex;
+    align-items: center;
+    width: 50px;
+
+}
+
+header nav{
+    width: 40%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+}
+
+header nav a {
+    color: rgb(125, 125, 129);
+    text-decoration: none;
+    font-weight: nomal;
+    font-size: small;
+}
+
+header nav a:hover {
+    text-decoration: underline;
+}
+
+header nav a.active{
+    padding: 10px;
+    background-color: #fce8ef;
+    color: #FF4081;
+    border-radius: 10px;
+}
+
+input[type="text"]{
+    width: 30%;
+    padding: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f3f4f7;
+}
+
+#myicon{
+    display: flex;
+    height: 40px;
+    width: 40px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background-color: #ccc;
+}
+
+/* ===== メインコンテンツ ===== */
+main {
+    padding: 2em;
+}
+
+/* ===== フッター ===== */
+footer {
+    background-color: #333;
+    color: #eee;
+    text-align: center;
+    padding: 1em;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/* ===== ボタン ===== */
+button {
+    padding: 0.5em 1em;
+    border: none;
+    background-color: #FF4081;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+
