@@ -30,5 +30,17 @@ def index():
 def upload():
     return ask_gemini(request)
 
+@app.route('/item/new')
+def item_new():
+    if "user_id" not in session:
+        return redirect("/login")
+    return render_template("item_new.html")
+
+@app.route('/item/search')
+def item_search():
+    if "user_id" not in session:
+        return redirect("/login")
+    return render_template("item_search.html")
+
 if __name__ == "__main__": #起動用
     app.run(debug=True)
