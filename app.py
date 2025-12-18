@@ -1,6 +1,8 @@
-from flask import Flask, request, render_template, session, redirect
+from flask import Flask, request, render_template, session, redirect, jsonify
 from gemini import ask_gemini
 from auth import auth_bp
+from db import get_db
+
 
 app = Flask(__name__)
 
@@ -41,6 +43,59 @@ def item_search():
     if "user_id" not in session:
         return redirect("/login")
     return render_template("item_search.html")
+
+# POSTに関するルート
+@app.route('/account/edit', methods=['GET', 'POST'])
+def account_edit():
+    if "user_id" not in session:
+        return redirect("/login")
+    if request.method == 'POST':
+        db = get_db()
+        user_id = session['user_id']
+        username = request.form.get('username')
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        password_confirm = request.form.get('confirm_password')
+
+        if new_password or password_confirm:
+            if not current_password:
+                return jsonify({
+                    "status": "error",
+                    "message": "現在のパスワードを入力してください"
+                })
+
+            row = db.execute(
+                'SELECT password FROM users WHERE id = ?',
+                (user_id,)
+            ).fetchone()
+
+            if not row or current_password != row['password']:
+                return jsonify({
+                    "status": "error",
+                    "message": "現在のパスワードが間違っています"
+                })
+
+            if new_password != password_confirm:
+                return jsonify({
+                    "status": "error",
+                    "message": "パスワードが一致しません"
+                })
+
+            db.execute(
+                'UPDATE users SET password = ? WHERE id = ?',
+                (new_password, user_id)
+            )
+
+        if username:
+            db.execute(
+                'UPDATE users SET username = ? WHERE id = ?',
+                (username, user_id)
+            )
+
+        db.commit()
+
+        return jsonify({"status": "success"})
+    return render_template('account_edit.html')  
 
 if __name__ == "__main__": #起動用
     app.run(debug=True)

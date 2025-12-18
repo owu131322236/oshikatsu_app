@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>アカウント設定</h2>
+<div class ="form-container">
+    <h3>ユーザー情報</h3>
+    <small>ここからユーザー名を変更できます。</small>
+    <form id="userForm" method="post">
+        <label>
+            ユーザー名
+            <input type="text" name="username" value="{{ username }}">
+        </label>
+        <button type="submit">更新する</button>
+    </form>
+</div>
+<div class ="form-container">
+    <h3>パスワード変更</h3>
+    <small>安全性を保つため、長くランダムなパスワードを使用してください。</small>
+    <form id="passwordForm" method="post">
+        <label>
+            現在のパスワード
+            <input type="password" name="current_password" required>
+        </label>
+        <label>
+            新しいパスワード
+            <input type="password" name="new_password">
+        </label>
+
+        <label>
+            パスワード（確認）
+            <input type="password" name="confirm_password">
+        </label>
+
+        <button type="submit">更新する</button>
+    </form>
+</div>
+<div id="message"></div>
+<style>
+    .form-container{
+        background-color: white;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+    }
+    form{
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+</style>
+<script>
+   $(function(){
+    $("form").on("submit", function(event){
+        event.preventDefault();
+        $.ajax({
+            type: "POST",
+            url:'/account/edit',
+            data: $(this).serialize(),
+            dataType: "json",
+
+            success: function(response){
+                if(response.status === "success"){
+                    $("#message").css("color", "green").text("アカウント情報を更新しました");
+                }else{
+                    $("#message").css("color", "red").text(response.message);
+                }
+            },
+            error: function(){
+                $("#message").css("color", "red").text("アカウント情報の更新に失敗しました");
+            }
+        })
+    })
+   }) 
+</script>
+{% endblock %}

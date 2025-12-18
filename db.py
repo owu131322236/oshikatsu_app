@@ -1,5 +1,7 @@
 import sqlite3
-DB_NAME = "app.db"
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_NAME = os.path.join(BASE_DIR, "setup/app.db")
 
 def get_db():
     conn = sqlite3.connect(DB_NAME)
