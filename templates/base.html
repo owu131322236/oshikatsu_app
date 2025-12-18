@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>推し活アプリ</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <!-- ヘッダー -->
@@ -18,7 +19,7 @@
             <a href="/item/search" class="{% if request.path == '/item/search'%}active{%endif%}">検索</a>
         </nav>
         <input type="text" placeholder="グッズを検索...">
-        <p id="myicon">{{ initial }}</p>
+        <a href="/account/edit" id="myicon">{{ initial }}</a>
     </header>
 
     <!-- メインコンテンツ -->
