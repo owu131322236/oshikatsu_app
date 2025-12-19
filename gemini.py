@@ -43,7 +43,7 @@ def ask_gemini(request):
     img.thumbnail((768, 768))
 
     # Geminiへ(利用制限に影響する可能性があるので一時的にコメントアウト)
-    # response = model.generate_content([prompt, img])
+    response = model.generate_content([prompt, img])
 
     answer = "<b>" + response.text + "</b>"
     return answer
