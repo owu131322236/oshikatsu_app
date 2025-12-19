@@ -3,6 +3,7 @@ from gemini import ask_gemini
 from auth import auth_bp
 from db import get_db
 
+# git-graphテスト
 
 app = Flask(__name__)
 
