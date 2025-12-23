@@ -105,6 +105,67 @@
   </div>
 
 </section>
+
+<script>
+    const sortSelect = document.getElementById("sortSelect");
+const filterSelect = document.getElementById("filterSelect");
+const goodsList = document.getElementById("goodsList");
+
+const cards = Array.from(document.querySelectorAll(".card"));
+const originalCards = [...cards];
+
+sortSelect.addEventListener("change", updateList);
+filterSelect.addEventListener("change", updateList);
+
+function updateList() {
+  const sortValue = sortSelect.value;
+  const filterValue = filterSelect.value;
+
+  let filteredCards = [...originalCards];
+
+  // ===== 絞り込み（複数カテゴリ対応）=====
+  if (filterValue) {
+    filteredCards = filteredCards.filter(card => {
+      const categories = card.dataset.category.split(",");
+      return categories.includes(filterValue);
+    });
+  }
+
+  // ===== 並び替え =====
+  if (sortValue === "name") {
+    filteredCards.sort((a, b) =>
+      a.dataset.name.localeCompare(b.dataset.name)
+    );
+  } else if (sortValue === "stock-desc") {
+    filteredCards.sort((a, b) =>
+      b.dataset.stock - a.dataset.stock
+    );
+  } else if (sortValue === "stock-asc") {
+    filteredCards.sort((a, b) =>
+      a.dataset.stock - b.dataset.stock
+    );
+  }
+
+  goodsList.innerHTML = "";
+  filteredCards.forEach(card => goodsList.appendChild(card));
+}
+
+
+cards.forEach(card => {
+  card.addEventListener("click", () => {
+    const name = card.dataset.name;
+    const stock = card.dataset.stock;
+    const category = card.dataset.category;
+    const image = card.dataset.image;
+
+    const url = `detail.html?name=${encodeURIComponent(name)}&stock=${stock}&category=${encodeURIComponent(category)}&image=${encodeURIComponent(image)}`;
+
+    window.location.href = url;
+  });
+});
+
+</script>
+
 <style>
     /* ===== 全体 ===== */
 .container {
