@@ -1,6 +1,109 @@
 {%extends "base.html"%}
 {%block content%}
 <!-- ここの内側にbodyの中身をお願いします！！ -->
-<p>中身をここに書きます</p>
+<header class="header">
+    <h1>一覧</h1>
+  </header>
+
+  <main class="container">
+
+<!-- 並び替え・絞り込み -->
+<section class="controls">
+  <select id="sortSelect">
+    <option value="">並び替え</option>
+    <option value="name">名前順</option>
+    <option value="stock-desc">個数が多い順</option>
+    <option value="stock-asc">個数が少ない順</option>
+  </select>
+
+  <select id="filterSelect">
+    <option value="">カテゴリー</option>
+    <option value="アクリルスタンド">アクリルスタンド</option>
+    <option value="缶バッジ">缶バッジ</option>
+    <option value="ぬいぐるみ">ぬいぐるみ</option>
+    <option value="ランダム商品">ランダム商品</option>
+    <option value="ぱしゃこれ">ぱしゃこれ</option>
+    <option value="18TRIP">18TRIP</option>
+    <option value="大黒可不可">大黒可不可</option>
+    <option value="蜂乃屋凪">蜂乃屋凪</option>
+  </select>
+</section>
+
+
+
+<section class="goods-list" id="goodsList">
+
+  <div class="card"
+       data-name="アクスタA"
+       data-category="アクリルスタンド"
+       data-stock="3"
+       data-image="images/goods1.jpg">
+    <img src="images/goods1.jpg">
+    <h2>アクスタA</h2>
+    <div class="tags">
+      <span class="tag">#アクスタ</span>
+    </div>
+    <p>在庫：3個</p>
+  </div>
+
+  <div class="card"
+       data-name="缶バッジB"
+       data-category="缶バッジ"
+       data-stock="10"
+       data-image="images/goods2.jpg">
+    <img src="images/goods2.jpg">
+    <h2>缶バッジB</h2>
+    <div class="tags">
+      <span class="tag">#缶バッジ</span>
+    </div>
+    <p>在庫：10個</p>
+  </div>
+
+  <div class="card"
+       data-name="ぬいぐるみC"
+       data-category="ぬいぐるみ"
+       data-stock="1"
+       data-image="images/goods3.jpg">
+    <img src="images/goods3.jpg">
+    <h2>ぬいぐるみC</h2>
+    <div class="tags">
+      <span class="tag">#ぬいぐるみ</span>
+    </div>
+    <p>在庫：1個</p>
+  </div>
+
+  <div class="card"
+       data-name="ぱしゃこれ（かふか）"
+       data-category="ぱしゃこれ,ランダム商品,18TRIP,大黒可不可"
+       data-stock="14"
+       data-image="images/goods4.jpg">
+    <img src="images/goods4.jpg">
+    <h2>ぱしゃこれ（かふか）</h2>
+    <div class="tags">
+      <span class="tag">#ぱしゃこれ</span>
+      <span class="tag">#18TRIP</span>
+      <span class="tag">#ランダム商品</span>
+      <span class="tag">#大黒可不可</span>
+    </div>
+    <p>在庫：14個</p>
+  </div>
+
+  <div class="card"
+       data-name="ぱしゃこれ（なぎ）"
+       data-category="ぱしゃこれ,ランダム商品,18TRIP,蜂乃屋凪"
+       data-stock="8"
+       data-image="images/goods5.jpg">
+    <img src="images/goods5.jpg">
+    <h2>ぱしゃこれ（なぎ）</h2>
+    <div class="tags">
+      <span class="tag">#ぱしゃこれ</span>
+      <span class="tag">#18TRIP</span>
+      <span class="tag">#ランダム商品</span>
+      <span class="tag">#蜂乃屋凪</span>
+    </div>
+    <p>在庫：8個</p>
+  </div>
+
+</section>
 <!-- ここまでです！！ -->
 {%endblock%}
