@@ -17,4 +17,29 @@
 
 </main>
 
+<script>
+  const params = new URLSearchParams(window.location.search);
+
+const name = params.get("name");
+const stock = params.get("stock");
+const categories = params.get("category");
+const image = params.get("image");
+
+// 表示
+document.getElementById("detailName").textContent = name;
+document.getElementById("detailStock").textContent = `在庫：${stock}個`;
+
+document.getElementById("detailImage").src = image;
+
+// タグ表示
+const tagsContainer = document.getElementById("detailTags");
+categories.split(",").forEach(cat => {
+  const span = document.createElement("span");
+  span.className = "tag";
+  span.textContent = `#${cat}`;
+  tagsContainer.appendChild(span);
+});
+
+</script>
+
 {%endblock%}
