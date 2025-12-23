@@ -105,5 +105,143 @@
   </div>
 
 </section>
+<style>
+    /* ===== 全体 ===== */
+.container {
+  padding: 20px;
+  padding-bottom: 80px; /* ボトムナビ分 */
+}
+
+/* ===== 並び替え・絞り込み ===== */
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.controls select {
+  flex: 1;                 /* 横幅を均等に */
+  height: 40px;            /* 縦長防止 */
+  padding: 0 10px;         /* 縦paddingを消す */
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background-color: #fff;
+
+  white-space: nowrap;     /* 文字折り返し防止 */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ===== グッズ一覧 ===== */
+.goods-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+/* ===== カード ===== */
+.card {
+  background-color: white;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.card img {
+  width: 100%;
+  height: 140px;           /* 画像サイズ統一 */
+  object-fit: cover;       /* はみ出し防止 */
+  border-radius: 10px;
+}
+
+.card h2 {
+  font-size: 15px;
+  margin: 8px 0 4px;
+}
+
+.card p {
+  font-size: 13px;
+  margin: 3px 0;
+}
+
+/* ===== ボトムナビ ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* ナビ項目 */
+.nav-item {
+  text-decoration: none;
+  color: #888;
+  font-size: 11px;
+  text-align: center;
+}
+
+.nav-item span {
+  font-size: 20px;
+  display: block;
+}
+
+/* 選択中 */
+.nav-item.active {
+  color: #ff5f9e;
+  font-weight: bold;
+}
+
+/* ===== タグ ===== */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.tag {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background-color: #ffe1ec;
+  color: #ff5f9e;
+}
+
+/* ===== チェックボックス ===== */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters label {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.filters input {
+  display: none;
+}
+
+.filters input:checked + span {
+  color: white;
+  background-color: #ff5f9e;
+}
+</style>
 <!-- ここまでです！！ -->
 {%endblock%}
