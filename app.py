@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, session, redirect, jsonify
-from gemini import ask_gemini
-from auth import auth_bp
+from routes.gemini import ask_gemini
+from routes.auth import auth_bp
+from routes.items import items_bp
 from db import get_db
 
 # git-graphテスト
@@ -9,6 +10,7 @@ app = Flask(__name__)
 
 app.secret_key = "your_secret_key"
 app.register_blueprint(auth_bp)
+app.register_blueprint(items_bp)
 
 @app.context_processor
 def inject_user():

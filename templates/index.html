@@ -1,75 +1,34 @@
-{%extends "base.html"%}
-{%block content%}
+{%extends "base.html"%} {%block content%}
 <!-- ここの内側にbodyの中身をお願いします！！ -->
-<header class="header">
-    <h1>一覧</h1>
-</header>
-
+<h1>一覧</h1>
 <!-- 並び替え・絞り込み -->
 <section class="controls">
   <select id="sortSelect">
     <option value="">並び替え</option>
-    <option value="name">名前順</option>
-    <option value="stock-desc">個数が多い順</option>
-    <option value="stock-asc">個数が少ない順</option>
+    <option><a href="/items/search?sort=newest">新しい順</a></option>
+    <option>
+      <a href="/items/search?sort=num_items_desc">個数が多い順</a>
+    </option>
+    <option>
+      <a href="/items/search?sort=num_items_asc">個数が少ない順</a>
+    </option>
   </select>
 
   <select id="filterSelect">
     <option value="">カテゴリー</option>
-    <option value="アクリルスタンド">アクリルスタンド</option>
-    <option value="缶バッジ">缶バッジ</option>
-    <option value="ぬいぐるみ">ぬいぐるみ</option>
-    <option value="ランダム商品">ランダム商品</option>
-    <option value="ぱしゃこれ">ぱしゃこれ</option>
-    <option value="18TRIP">18TRIP</option>
-    <option value="大黒可不可">大黒可不可</option>
-    <option value="蜂乃屋凪">蜂乃屋凪</option>
+    {% for category in categories%}
+    <option value="{{category.name}}">{{category.name}}</option>
+    {% endfor %}
   </select>
 </section>
 
-
-
 <section class="goods-list" id="goodsList">
+  {% for item in items %} {% include "components/item_card.html" %} {% else %}
+  <li>データがありません</li>
+  {% endfor %}
 
-  <div class="card"
-       data-name="アクスタA"
-       data-category="アクリルスタンド"
-       data-stock="3"
-       data-image="images/goods1.jpg">
-    <img src="images/goods1.jpg">
-    <h2>アクスタA</h2>
-    <div class="tags">
-      <span class="tag">#アクスタ</span>
-    </div>
-    <p>在庫：3個</p>
-  </div>
-
-  <div class="card"
-       data-name="缶バッジB"
-       data-category="缶バッジ"
-       data-stock="10"
-       data-image="images/goods2.jpg">
-    <img src="images/goods2.jpg">
-    <h2>缶バッジB</h2>
-    <div class="tags">
-      <span class="tag">#缶バッジ</span>
-    </div>
-    <p>在庫：10個</p>
-  </div>
-
-  <div class="card"
-       data-name="ぬいぐるみC"
-       data-category="ぬいぐるみ"
-       data-stock="1"
-       data-image="images/goods3.jpg">
-    <img src="images/goods3.jpg">
-    <h2>ぬいぐるみC</h2>
-    <div class="tags">
-      <span class="tag">#ぬいぐるみ</span>
-    </div>
-    <p>在庫：1個</p>
-  </div>
-
+  <!-- 後で書く際に参考したいので残しておきます
+  
   <div class="card"
        data-name="ぱしゃこれ（かふか）"
        data-category="ぱしゃこれ,ランダム商品,18TRIP,大黒可不可"
@@ -100,133 +59,89 @@
       <span class="tag">#蜂乃屋凪</span>
     </div>
     <p>在庫：8個</p>
-  </div>
-
+  </div> -->
 </section>
+<div id="modalOverlay" class="overlay hidden"></div>
 
 <script>
-    const sortSelect = document.getElementById("sortSelect");
-const filterSelect = document.getElementById("filterSelect");
-const goodsList = document.getElementById("goodsList");
-
-const cards = Array.from(document.querySelectorAll(".card"));
-const originalCards = [...cards];
-
-sortSelect.addEventListener("change", updateList);
-filterSelect.addEventListener("change", updateList);
-
-function updateList() {
-  const sortValue = sortSelect.value;
-  const filterValue = filterSelect.value;
-
-  let filteredCards = [...originalCards];
-
-  // ===== 絞り込み（複数カテゴリ対応）=====
-  if (filterValue) {
-    filteredCards = filteredCards.filter(card => {
-      const categories = card.dataset.category.split(",");
-      return categories.includes(filterValue);
+  const cards = Array.from(document.querySelectorAll(".card"));
+  $(document).on("click", ".card", function () {
+    const itemId = $(this).data("item-id");
+    if (!itemId) {
+      console.error("itemIdがありません");
+      return;
+    }
+    $("#modalOverlay").removeClass("hidden");
+    $("#modalOverlay").load(`/items/${itemId}/modal`); //ajaxで操作
+    $(document).on("click", "#modalOverlay", function (e) {
+      if (e.target.id === "modalOverlay") {
+        $(this).addClass("hidden").empty();
+      }
     });
-  }
-
-  // ===== 並び替え =====
-  if (sortValue === "name") {
-    filteredCards.sort((a, b) =>
-      a.dataset.name.localeCompare(b.dataset.name)
-    );
-  } else if (sortValue === "stock-desc") {
-    filteredCards.sort((a, b) =>
-      b.dataset.stock - a.dataset.stock
-    );
-  } else if (sortValue === "stock-asc") {
-    filteredCards.sort((a, b) =>
-      a.dataset.stock - b.dataset.stock
-    );
-  }
-
-  goodsList.innerHTML = "";
-  filteredCards.forEach(card => goodsList.appendChild(card));
-}
-
-
-cards.forEach(card => {
-  card.addEventListener("click", () => {
-    const name = card.dataset.name;
-    const stock = card.dataset.stock;
-    const category = card.dataset.category;
-    const image = card.dataset.image;
-
-    const url = `detail.html?name=${encodeURIComponent(name)}&stock=${stock}&category=${encodeURIComponent(category)}&image=${encodeURIComponent(image)}`;
-
-    window.location.href = url;
   });
-});
 
 </script>
 
 <style>
-        /* ===== 全体 ===== */
-    .container {
-    padding: 20px;
-    padding-bottom: 80px; /* ボトムナビ分 */
-    }
-
-    /* ===== 並び替え・絞り込み ===== */
-    .controls {
+  .hidden {
+    display: none;
+  }
+  /* ===== 並び替え・絞り込み ===== */
+  .controls {
     display: flex;
     gap: 8px;
     margin-bottom: 20px;
-    }
+  }
 
-    .controls select {
-    flex: 1;                 /* 横幅を均等に */
-    height: 40px;            /* 縦長防止 */
-    padding: 0 10px;         /* 縦paddingを消す */
+  .controls select {
+    flex: 1; /* 横幅を均等に */
+    height: 40px; /* 縦長防止 */
+    padding: 0 10px; /* 縦paddingを消す */
     border-radius: 8px;
     border: 1px solid #ccc;
     font-size: 14px;
     background-color: #fff;
 
-    white-space: nowrap;     /* 文字折り返し防止 */
+    white-space: nowrap; /* 文字折り返し防止 */
     -webkit-appearance: none;
     appearance: none;
-    }
+  }
 
-    /* ===== グッズ一覧 ===== */
-    .goods-list {
+  /* ===== グッズ一覧 ===== */
+  .goods-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 16px;
-    }
+  }
 
-    /* ===== カード ===== */
-    .card {
+  /* ===== カード ===== */
+  .card {
     background-color: white;
     border-radius: 14px;
     padding: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
-    }
+  }
 
-    .card img {
+  .card img {
     width: 100%;
-    height: 140px;           /* 画像サイズ統一 */
-    object-fit: cover;       /* はみ出し防止 */
+    height: 140px; /* 画像サイズ統一 */
+    object-fit: cover; /* はみ出し防止 */
     border-radius: 10px;
-    }
+  }
 
-    .card h2 {
+  .card h2 {
     font-size: 15px;
     margin: 8px 0 4px;
-    }
+  }
 
-    .card p {
+  .card p {
     font-size: 13px;
     margin: 3px 0;
-    }
+  }
 
-    /* ===== ボトムナビ ===== */
-    .bottom-nav {
+  /* ===== ボトムナビ ===== */
+  .bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -238,69 +153,64 @@ cards.forEach(card => {
     align-items: center;
     border-top: 1px solid #ddd;
     box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
-    }
+  }
 
-    /* ナビ項目 */
-    .nav-item {
-    text-decoration: none;
-    color: #888;
-    font-size: 11px;
-    text-align: center;
-    }
-
-    .nav-item span {
-    font-size: 20px;
-    display: block;
-    }
-
-    /* 選択中 */
-    .nav-item.active {
-    color: #ff5f9e;
-    font-weight: bold;
-    }
-
-    /* ===== タグ ===== */
-    .tags {
+  /* ===== タグ ===== */
+  .tags {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     justify-content: center;
     margin-top: 6px;
-    }
+  }
 
-    .tag {
+  .tag {
     font-size: 11px;
     padding: 4px 8px;
     border-radius: 999px;
     background-color: #ffe1ec;
     color: #ff5f9e;
-    }
+  }
 
-    /* ===== チェックボックス ===== */
-    .filters {
+  /* ===== チェックボックス ===== */
+  .filters {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 20px;
-    }
+  }
 
-    .filters label {
+  .filters label {
     font-size: 12px;
     padding: 6px 10px;
     border-radius: 20px;
     background-color: #fff;
     border: 1px solid #ddd;
     cursor: pointer;
-    }
+  }
 
-    .filters input {
+  .filters input {
     display: none;
-    }
+  }
 
-    .filters input:checked + span {
+  .filters input:checked + span {
     color: white;
     background-color: #ff5f9e;
-    }
+  }
+  #modalOverlay {
+  position: fixed;
+  inset: 0;                
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center; 
+  align-items: center;     
+  z-index: 1000;
+}
+#modalOverlay.hidden {
+  display: none;
+}
 </style>
 <!-- ここまでです！！ -->
 {%endblock%}
