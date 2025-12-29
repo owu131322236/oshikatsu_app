@@ -1,8 +1,8 @@
 <div class="modal">
     <img src="{{ url_for('static', filename='images/' ~ item.image_path) }}" alt="">
     <div class="tags">
-      {% for cat in item.categories %}
-        <span class="tag">{{ cat }}</span>
+      {% for category in item.categories %}
+        <span class="tag">#{{ category }}</span>
       {% endfor %}
     </div>
     <h2>{{ item.name }}</h2>
@@ -10,7 +10,8 @@
     <p>キャラクター名：{{ item.character_name }}</p>
     <p>{{ item.description }}</p>
     <p>在庫：{{ item.quantity }}</p>
-    <button>編集する</button>
+    <button id="edit-button">編集する</button>
+    <button id="delete-button">削除する</button>
 </div>
 <style>
     .modal {
@@ -53,4 +54,23 @@
       font-size: 14px;
     }
 </style>
+<script>
+  $("#edit-button").click(function() {
+        window.location.href = "/item/{{ item.id }}/edit";
+    });
+    $("#delete-button").click(function() {
+        if (confirm("本当に削除しますか？")) {
+            $.ajax({
+                url: "/item/{{ item.id }}/delete",
+                type: "POST",
+                success: function(response) {
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert("削除に失敗しました。");
+                }
+            });
+        }
+    });
+</script>
   

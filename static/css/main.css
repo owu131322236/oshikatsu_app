@@ -11,6 +11,7 @@ body {
 
 h1, h2, h3 {
     margin: 0;
+    flex-shrink: 0;
     /* padding: 0.5em 0; */
 }
 
@@ -68,16 +69,33 @@ input[type="text"]{
     border-radius: 10px;
     background-color: #f3f4f7;
 }
-
+.header-right{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+}
 #myicon{
     display: flex;
+    flex-shrink: 0;
     height: 40px;
     width: 40px;
     text-align: center;
+    text-decoration: none;
     justify-content: center;
     align-items: center;
     border-radius: 50%;
     background-color: #ccc;
+}
+#myicon:hover{
+    background-color: #c0c0c0;
+}
+#item-button{
+    padding: 10px 30px;
+    font-size: smaller;
+    border: none;
+    cursor: pointer;
+    background-color: black;
 }
 
 /* ===== メインコンテンツ ===== */
@@ -91,7 +109,7 @@ footer {
     color: #eee;
     text-align: center;
     padding: 1em;
-    position: fixed;
+    /* position: fixed; */
     bottom: 0;
     width: 100%;
 }

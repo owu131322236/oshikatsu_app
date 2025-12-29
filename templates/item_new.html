@@ -1,6 +1,213 @@
-{%extends "base.html"%}
-{%block content%}
+{%extends "base.html"%} {%block content%}
 <!-- ここの内側にbodyの中身をお願いします！！ -->
-<p>中身をここに書きます</p>
+<div class="container">
+  {% if mode == "create" %}
+    <h1>グッズ登録</h1>
+    <p class="lead">グッズ情報を登録します</p>
+  {% else %}
+    <h1>グッズ編集</h1>
+    <p class="lead">グッズ情報を編集します</p>
+  {% endif %}
+
+  <div class="card">
+    <form id="itemForm" method="post" action="/item/create" enctype="multipart/form-data">
+      <div class="grid">
+        <!-- 画像 -->
+        <div>
+          {% if mode == "edit" and item.image_path %}
+            <img id="current-img" src="{{ url_for('static', filename='images/' ~ item.image_path) }}" alt="現在の画像">
+          {% endif %}
+          <div class="preview-box" id="dropZone">
+            <div id="emptyState">
+              <p class="small">画像を選択してください</p>
+              <input type="file" id="imageInput" name="image_file" accept="image/*" required/>
+            </div>
+            <div id="previewArea" style="display: none">
+              <img id="previewImage" />
+              <div class="small" id="imageInfo"></div>
+            </div>
+          </div>
+          <button
+            type="button"
+            id="clearImage"
+            class="secondary"
+            style="margin-top: 8px"
+          >
+            画像をクリア
+          </button>
+        </div>
+
+        <!-- 入力 -->
+        <div>
+            <div class="input-row">
+                <label >タイトル</label>
+                <input type="text" name="name" value="{{ item.name if item else ''}}" />
+              </div>
+          <div class="input-row">
+            <label >作品名</label>
+            <input type="text" name="work_title" value="{{ item.work_title if item else ''}}"/>
+          </div>
+
+          <div class="input-row">
+            <label>キャラクター / アイドル名</label>
+            <input type="text" name="character_name" value="{{ item.character_name if item else ''}}"/>
+          </div>
+
+          <!-- ★ 個数（0可） -->
+          <div class="input-row">
+            <label>個数</label>
+            <input type="number" name="quantity" min="0" value="{{ item.quantity if item else '0'}}" required />
+            <div class="small">0：未所持 / 予約 / 記録用</div>
+          </div>
+
+          <div class="input-row">
+            <label>カテゴリー</label>
+            <select name="category" size="6">
+              {% for category in categories %}
+                <option>{{ category.name }}</option>
+                {% endfor %}
+              <option>その他</option>
+            </select>
+          </div>
+
+          <div class="input-row">
+            <label for="tags">タグ（カンマ区切り）</label>
+            <input type="text" id="tags" />
+          </div>
+
+          <div class="input-row">
+            <label>詳細</label>
+            <textarea name="description" value="{{ item.description if item else ''}}"></textarea>
+          </div>
+
+          <div class="actions">
+            <button type="submit">保存する</button>
+          </div>
+
+          <div id="result" style="margin-top: 12px"></div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  $("#itemForm").on("submit", function(e){
+    e.preventDefault();
+    const itemData = new FormData(this);
+
+    $.ajax({
+        url: "/item/create",
+        type: "POST",
+        data: itemData,
+
+        processData: false,
+        contentType: false,
+        success: function(){
+            $("#result").css("color", "green").html("グッズを登録しました")
+        },
+        error: function(xhr){
+            if(xhr.responseJSON && xhr.responseJSON.errors){
+                $("#result").css("color", "red").html(xhr.responseJSON.errors.join("<br>"));
+            }
+        }
+    });
+  });
+</script>
+<style>
+  :root {
+    --pink: #ff6fa3;
+    --card: #ffffff;
+    --muted: #666;
+  }
+  /* body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto,
+      "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    background: linear-gradient(180deg, #fff 0%, #fff9fb 100%);
+    margin: 0;
+    padding: 24px;
+  } */
+  /* .container {
+    max-width: 860px;
+    margin: 0 auto;
+  } */
+  /* h1 {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+  } */
+  p.lead {
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 18px;
+  }
+  .preview-box {
+    border: 2px dashed rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .preview-box img {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+  .input-row {
+    margin-bottom: 12px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .container input[type="text"],
+  .container input[type="number"],
+  .container select,
+  .container textarea {
+    width: 80%;
+    padding: 10px;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .container textarea {
+    min-height: 86px;
+  }
+  .small {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .container button {
+    background: var(--pink);
+    border: none;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .container button.secondary {
+    background: #f3f3f3;
+    color: #333;
+  }
+  #current-img {
+    max-width: 200px;
+    margin-bottom: 12px;
+  }
+</style>
 <!-- ここまでです！！ -->
 {%endblock%}
