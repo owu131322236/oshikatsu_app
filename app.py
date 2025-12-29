@@ -35,8 +35,8 @@ def index():
 def upload():
     return ask_gemini(request)
 
-@app.route('/item/new')
-def item_new():
+@app.route('/item/create')
+def item_creare():
     if "user_id" not in session:
         return redirect("/login")
     return render_template("item_new.html")

@@ -15,11 +15,13 @@
         </div>
         <nav>
             <a href="/" class="{% if request.path == '/'%}active{%endif%}">ホーム</a>
-            <a href="/item/new" class="{% if request.path == '/item/new'%}active{%endif%}">登録</a>
+            <!-- <a href="/item/create" class="{% if request.path == '/item/create'%}active{%endif%}">登録</a> -->
             <a href="/item/search" class="{% if request.path == '/item/search'%}active{%endif%}">検索</a>
         </nav>
-        <input type="text" placeholder="グッズを検索...">
-        <a href="/account/edit" id="myicon">{{ initial }}</a>
+        <div class="header-right">
+            <button type="button" id="item-button">+アイテムを追加</button>
+            <a href="/account/edit" id="myicon">{{ initial }}</a>
+        </div>
     </header>
 
     <!-- メインコンテンツ -->
