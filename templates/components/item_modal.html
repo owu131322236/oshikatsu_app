@@ -56,12 +56,12 @@
 </style>
 <script>
   $("#edit-button").click(function() {
-        window.location.href = "/item/{{ item.id }}/edit";
+        window.location.href = "/items/{{ item.id }}/edit";
     });
     $("#delete-button").click(function() {
         if (confirm("本当に削除しますか？")) {
             $.ajax({
-                url: "/item/{{ item.id }}/delete",
+                url: "/items/{{ item.id }}/delete",
                 type: "POST",
                 success: function(response) {
                     location.reload();

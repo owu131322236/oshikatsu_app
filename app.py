@@ -35,13 +35,13 @@ def index():
 def upload():
     return ask_gemini(request)
 
-@app.route('/item/create')
+@app.route('/items/create')
 def item_creare():
     if "user_id" not in session:
         return redirect("/login")
     return render_template("item_new.html")
 
-@app.route('/item/search')
+@app.route('/items/search')
 def item_search():
     if "user_id" not in session:
         return redirect("/login")

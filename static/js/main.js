@@ -1,3 +1,3 @@
 $("#item-button").on("click", function() {
-    window.location.href = "/item/create";
+    window.location.href = "/items/create";
 });
