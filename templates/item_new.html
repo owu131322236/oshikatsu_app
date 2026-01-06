@@ -10,7 +10,7 @@
   {% endif %}
 
   <div class="card">
-    <form id="itemForm" method="post" action="/items/create" enctype="multipart/form-data">
+    <form id="itemForm" method="post" action="/item/create" enctype="multipart/form-data">
       <div class="grid">
         <!-- 画像 -->
         <div>
@@ -97,7 +97,7 @@
     const itemData = new FormData(this);
 
     $.ajax({
-        url: "/items/create",
+        url: "/item/create",
         type: "POST",
         data: itemData,
 
