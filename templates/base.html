@@ -20,7 +20,7 @@
         </nav>
         <div class="header-right">
             <button type="button" id="item-button" onclick="location.href='/items/create'">+アイテムを追加</button>
-            <a href="/account/edit" id="myicon">{{ initial }}</a>
+            <a href="/account/edit" id="myicon"><img src="{{ url_for('static', filename='images/icons/' ~ icon_path) }}"  style="width:50px; height:50px; border-radius:50%;"></a>
         </div>
     </header>
 
@@ -30,9 +30,16 @@
     </main>
 
     <!-- フッター -->
-    <footer>
-        <p>© 2025 Team Oshikatsu</p>
+    <footer class="site-footer">
+        <div class="footer-content">
+          <p>&copy; 2026 Oshikatsu App</p>
+          <nav class="footer-nav">
+            <a href="#">利用規約</a>
+            <a href="#">プライバシーポリシー</a>
+            <a href="#">お問い合わせ</a>
+          </nav>
+        </div>
     </footer>
-    
+       
 </body>
 </html>

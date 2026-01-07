@@ -3,8 +3,20 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=filter_alt" />
 <!-- ここの内側にbodyの中身をお願いします！！ -->
  <div id="header-message">
-  <h1>こんにちは、{{ username }}さん</h1>
-  <small>現在のアイテム登録数{{ items | length }}点</small>
+  <small style="color: #ff4ea9;">ーDASHBOARD</small>
+  <h1>
+    こんにちは、 
+    <span style="background: linear-gradient(90deg, #ff4ea9 0%, #ff5162 60%, #ff4444 80%);
+                 -webkit-background-clip: text; 
+                 -webkit-text-fill-color: transparent;">
+      {{ username }}さん
+    </span>
+  </h1>
+  <small>
+    現在のコレクションに
+    <span style="font-weight: bold;">{{ items | length }}</span>
+    点のアイテムが登録されています
+  </small>
 </div>
 <div class="filter-overall">
   <div id="category-filters">

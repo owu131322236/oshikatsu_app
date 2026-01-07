@@ -1,11 +1,17 @@
 
 PRAGMA foreign_keys = ON;
-
+CREATE TABLE IF NOT EXISTS icons (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  image_path TEXT
+);
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT, -- ユーザーIDを自動生成
-    username TEXT UNIQUE NOT NULL, -- ユーザー名はユニークで必須
+    icon_id INTEGER DEFAULT 1,
+    username TEXT NOT NULL, 
+    email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL, -- パスワード必須
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP -- 作成日時デフォルトは現在時刻
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- 作成日時デフォルトは現在時刻
+    FOREIGN KEY(icon_id) REFERENCES icons(id)
 );
 CREATE TABLE IF NOT EXISTS items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
