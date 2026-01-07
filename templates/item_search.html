@@ -2,5 +2,55 @@
 {%block content%}
 <!-- ここの内側にbodyの中身をお願いします！！ -->
 <p>中身をここに書きます</p>
+<input id="keyword" placeholder="キーワード">
+<select id="category">...</select>
+<select id="quantity">
+  <option value="">在庫すべて</option>
+  <option value="in">在庫あり</option>
+  <option value="out">在庫なし</option>
+</select>
+<!-- <select id="sort">...</select> -->
+<div class="sort-controls">
+    <div id="sort">
+      <img src="/static/images/icons/sort.svg" alt="並び替えアイコン" width="24" height="24" />
+      <select name="sort">
+        <option value="newest">新しい順</option>
+        <option value="num_items_desc">個数が多い順</option>
+        <option value="num_items_asc">個数が少ない順</option>
+      </select>
+    </div>
+    <!-- <img class="view_confy" src="/static/images/icons/list_pink.svg" alt="並び替えアイコン" width="24" height="24" />
+    <img src="/static/images/icons/view_comfy_black.svg" alt="並び替えアイコン" width="24" height="24" /> -->
+  </div>
+<button id="searchBtn">検索</button>
+<ul id="goodsList">
+    {% include "components/item_list.html" %}
+</ul>
+<script>
+document.getElementById("searchBtn").addEventListener("click", function(){
+    const categoryValue = $(this).val();
+    const sortValue = $("#sort select").val();
+    const keyword = $("#keyword").val();
+    const category = $("#category").val();
+    const quantity = $("#quantity").val();
+    $.ajax({
+      url: "/items/search/results",
+      type: "GET",
+      data: {
+        sort: sortValue,
+        category: categoryValue,
+        keyword: keyword,
+        category: category,
+        quantity: quantity,
+      },
+      success: function(response){
+        $("#goodsList").html(response);
+      },
+      error: function(xhr, status, error){
+        console.error("読み込みに失敗しました:", error);
+      }
+    })
+})
+</script>
 <!-- ここまでです！！ -->
 {%endblock%}

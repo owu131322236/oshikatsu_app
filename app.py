@@ -14,16 +14,47 @@ app.register_blueprint(items_bp)
 
 @app.context_processor
 def inject_user():
+    icon_id = session.get("icon_id", 1)
     username = session.get("username", "None")
     initial = username[0].upper() if username else "N" 
-    return dict(username=session.get("username"), initial=initial)
-
+    db = get_db()
+    icon_row = db.execute("SELECT image_path FROM icons WHERE id = ?", (icon_id,)).fetchone()
+    icon_path = icon_row["image_path"] 
+    return dict(username=session.get("username"), initial=initial, icon_path=icon_path)
 
 @app.route("/login")
 def home():
     if "user_id" not in session:
         return redirect("/login")
     return redirect("/")
+
+@app.route('/signup')
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    db = get_db()
+    icons = db.execute("SELECT id, image_path FROM icons").fetchall()
+    if request.method == 'POST':
+        icon_id = request.form.get("icon", 1)
+        username = request.form.get("username")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        password_confirm = request.form.get("password_confirm")
+
+        row = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        if row:
+            return jsonify({"status": "error", "message": "すでに登録済みのメールアドレスです"})
+
+        if password != password_confirm:
+            return jsonify({"status": "error", "message": "パスワードが一致しません"})
+
+        db.execute(
+            "INSERT INTO users (icon_id, username, email, password) VALUES (?, ?, ?, ?)",
+            (icon_id, username, email, password)
+        )
+        db.commit()
+        return render_template("index.html",icons=icons)
+
+    return render_template("signup.html",icons=icons)
 
 @app.route("/")
 def index():
@@ -52,10 +83,16 @@ def item_search():
 def account_edit():
     if "user_id" not in session:
         return redirect("/login")
+    db = get_db()
+    user_id = session.get("user_id")
+    icons = db.execute("SELECT id, image_path FROM icons").fetchall()
+    user = db.execute("SELECT username, email, icon_id FROM users WHERE id = ?", (user_id,)).fetchone()
     if request.method == 'POST':
         db = get_db()
         user_id = session['user_id']
+        icon = request.form.get('icon')
         username = request.form.get('username')
+        email =request.form.get('email')
         current_password = request.form.get('current_password')
         new_password = request.form.get('new_password')
         password_confirm = request.form.get('confirm_password')
@@ -88,17 +125,31 @@ def account_edit():
                 'UPDATE users SET password = ? WHERE id = ?',
                 (new_password, user_id)
             )
-
+        if icon:
+            db.execute(
+                'UPDATE users SET icon_id = ? WHERE id = ?',
+                (icon, user_id)
+            )
         if username:
             db.execute(
                 'UPDATE users SET username = ? WHERE id = ?',
                 (username, user_id)
             )
+        if email:
+            db.execute(
+                'UPDATE users SET email = ? WHERE id = ?',
+                (email, user_id)
+            )
 
         db.commit()
 
         return jsonify({"status": "success"})
-    return render_template('account_edit.html')  
+    
+    return render_template('account_edit.html',
+        icons=icons,
+        username=user["username"],
+        email=user["email"],
+        selected_icon=user["icon_id"])  
 
 if __name__ == "__main__": #起動用
     app.run(host="0.0.0.0", port=5001, debug=True)

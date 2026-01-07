@@ -94,6 +94,7 @@ input[type="text"]{
     padding: 10px 30px;
     font-size: smaller;
     border: none;
+    border-radius: 10px;
     cursor: pointer;
     background-color: black;
 }
@@ -104,16 +105,31 @@ main {
 }
 
 /* ===== フッター ===== */
-footer {
-    background-color: #333;
-    color: #eee;
+.site-footer {
+    margin-top: 40px;
+    padding: 20px 0;
+    background-color: #f1f3f5; 
     text-align: center;
-    padding: 1em;
-    /* position: fixed; */
-    bottom: 0;
-    width: 100%;
-}
-
+    font-size: 13px;
+    color: #555;
+    border-top: 1px solid #d1d5db; 
+  }
+  
+  .footer-nav {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+  }
+  
+  .footer-nav a {
+    color: #555; 
+    text-decoration: none;
+  }
+  
+  .footer-nav a:hover {
+    text-decoration: underline;
+  }
 /* ===== ボタン ===== */
 button {
     padding: 0.5em 1em;

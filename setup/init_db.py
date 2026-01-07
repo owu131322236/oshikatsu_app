@@ -20,12 +20,23 @@ def init_db():
             (4, "フィギュア"),
         ]
     )
+    cursor.executemany(
+        "INSERT OR IGNORE INTO icons(id, image_path) VALUES(?,?)",
+        [
+            (1,"barcode.png"),
+            (2,"bulbs.png"),
+            (3, "flower.png"),
+            (4,"magnifying_glass.png"),
+            (5, "zombie.png")
+        ]
+    )
     #初期テーブル
     default_username = "test"
-    default_password = "test123"  
+    default_email = "test@example.com"
+    default_password = "test123"
     cursor.execute(
-        "INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)",
-        (default_username, default_password)
+        "INSERT OR IGNORE INTO users (username, email, password) VALUES (?, ?, ?)",
+        (default_username, default_email, default_password)
     )
     cursor.executemany(
         "INSERT OR IGNORE INTO items (id, user_id, name, image_path) VALUES(?, ?, ?, ?)",

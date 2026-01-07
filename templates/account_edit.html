@@ -1,78 +1,191 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <h2>アカウント設定</h2>
-<div class ="form-container">
-    <h3>ユーザー情報</h3>
-    <small>ここからユーザー名を変更できます。</small>
-    <form id="userForm" method="post">
+<div class="form-container">
+  <h3>ユーザー情報</h3>
+  <small>ここからユーザー名を変更できます。</small>
+  <form id="userForm" method="post">
+    <label>
+      アイコン
+      <div class="icons">
+        {% for icon in icons %}
         <label>
-            ユーザー名
-            <input type="text" name="username" value="{{ username }}">
+          <input type="radio" name="icon" value="{{ icon.id }}" {% if icon.id ==selected_icon %}checked{% endif %} />
+          <img
+            src="{{ url_for('static', filename='images/icons/' ~ icon.image_path) }}"
+            alt="アイコン{{ icon.id }}"
+          />
         </label>
-        <button type="submit">更新する</button>
-    </form>
+        {% endfor %}
+      </div>
+    </label>
+    <label>
+      ユーザー名
+      <input type="text" name="username" value="{{ username }}" />
+    </label>
+    <label>
+      メールアドレス
+      <input type="text" name="email" value="{{ email }}" />
+    </label>
+    <button type="submit">更新する</button>
+  </form>
 </div>
-<div class ="form-container">
-    <h3>パスワード変更</h3>
-    <small>安全性を保つため、長くランダムなパスワードを使用してください。</small>
-    <form id="passwordForm" method="post">
-        <label>
-            現在のパスワード
-            <input type="password" name="current_password" required>
-        </label>
-        <label>
-            新しいパスワード
-            <input type="password" name="new_password">
-        </label>
+<div class="form-container">
+  <h3>パスワード変更</h3>
+  <small>安全性を保つため、長くランダムなパスワードを使用してください。</small>
+  <form id="passwordForm" method="post">
+    <label>
+      現在のパスワード
+      <input type="password" name="current_password" required />
+    </label>
+    <label>
+      新しいパスワード
+      <input type="password" name="new_password" />
+    </label>
 
-        <label>
-            パスワード（確認）
-            <input type="password" name="confirm_password">
-        </label>
+    <label>
+      パスワード（確認）
+      <input type="password" name="confirm_password" />
+    </label>
 
-        <button type="submit">更新する</button>
-    </form>
+    <button type="submit">更新する</button>
+  </form>
 </div>
 <div id="message"></div>
 <style>
-    .form-container{
-        background-color: white;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        border-radius: 5px;
-        padding: 15px;
-        margin: 15px 0;
-    }
-    form{
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
+  .form-container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .form-container h3 {
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+    color: #333;
+  }
+
+  .form-container small {
+    display: block;
+    margin-bottom: 16px;
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  form label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.95rem;
+    color: #444;
+  }
+  input[type="text"],
+  input[type="password"] {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input[type="text"]:focus,
+  input[type="password"]:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+  }
+
+  button {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: #4f46e5;
+    transition: background-color 0.2s, transform 0.1s;
+  }
+
+  button:hover {
+    background-color: #4338ca;
+    transform: translateY(-1px);
+  }
+
+  .icons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 12px;
+    justify-items: center;
+  }
+
+  .icons label {
+    cursor: pointer;
+    display: block;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 4px;
+    transition: border 0.2s, transform 0.2s;
+  }
+
+  .icons input[type="radio"] {
+    display: none;
+  }
+
+  .icons input[type="radio"]:checked + img {
+    border: 2px solid #4f46e5;
+    transform: scale(1.1);
+  }
+
+  .icons img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: transform 0.2s, border 0.2s;
+  }
+
+  .icons img:hover {
+    transform: scale(1.1);
+  }
+
+  /* メッセージ表示 */
+  #message {
+    margin-top: 12px;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
 </style>
 <script>
-   $(function(){
-    $("form").on("submit", function(event){
-        event.preventDefault();
-        $.ajax({
-            type: "POST",
-            url:'/account/edit',
-            data: $(this).serialize(),
-            dataType: "json",
+  $(function () {
+    $("form").on("submit", function (event) {
+      event.preventDefault();
+      $.ajax({
+        type: "POST",
+        url: "/account/edit",
+        data: $(this).serialize(),
+        dataType: "json",
 
-            success: function(response){
-                if(response.status === "success"){
-                    $("#message").css("color", "green").text("アカウント情報を更新しました");
-                }else{
-                    $("#message").css("color", "red").text(response.message);
-                }
-            },
-            error: function(){
-                $("#message").css("color", "red").text("アカウント情報の更新に失敗しました");
-            }
-        })
-    })
-   }) 
+        success: function (response) {
+          if (response.status === "success") {
+            $("#message")
+              .css("color", "green")
+              .text("アカウント情報を更新しました");
+          } else {
+            $("#message").css("color", "red").text(response.message);
+          }
+        },
+        error: function () {
+          $("#message")
+            .css("color", "red")
+            .text("アカウント情報の更新に失敗しました");
+        },
+      });
+    });
+  });
 </script>
 {% endblock %}
