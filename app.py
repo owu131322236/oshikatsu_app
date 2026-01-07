@@ -101,4 +101,4 @@ def account_edit():
     return render_template('account_edit.html')  
 
 if __name__ == "__main__": #起動用
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)
