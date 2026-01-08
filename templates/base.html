@@ -9,8 +9,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <!-- ヘッダー -->
-    <header>
+    <!-- PC用ヘッダー -->
+    <header class="header-pc">
         <div id="logo-section">
             <img src="{{ url_for('static', filename='images/demo_logo.png') }}" alt="ロゴ" id="logo">
             <h3>推し活アプリ</h3>
@@ -25,14 +25,18 @@
             <a href="/account/edit" id="myicon"><img src="{{ url_for('static', filename='images/icons/' ~ icon_path) }}"  style="width:50px; height:50px; border-radius:50%;"></a>
         </div>
     </header>
+    <!-- スマホ用ヘッダー -->
+    <header class="header-sp">
+        <img src="{{ url_for('static', filename='images/demo_logo.png') }}" alt="ロゴ" id="logo">
+    </header>
 
     <!-- メインコンテンツ -->
     <main>
         {% block content %}{% endblock %}
     </main>
 
-    <!-- フッター -->
-    <footer class="site-footer">
+    <!-- フッター(PCもスマホも) -->
+    <footer class="footer-pc">
         <div class="footer-content">
           <p>&copy; 2026 Oshikatsu App</p>
           <nav class="footer-nav">
@@ -41,6 +45,13 @@
             <a href="#">お問い合わせ</a>
           </nav>
         </div>
+    </footer>
+    <!-- メニューバーなどのフッダー -->
+    <footer class="footer-sp">
+        <a href="/" class="{% if request.path == '/'%}active{%endif%}">ホーム</a>
+        <a href="/items/search" class="{% if request.path == '/items/search'%}active{%endif%}">検索</a>
+        <a href="/items/create" class="{% if request.path == '/items/search'%}active{%endif%}">検索</a>
+        <a href="/account/edit" id="myicon"><img src="{{ url_for('static', filename='images/icons/' ~ icon_path) }}"  style="width:50px; height:50px; border-radius:50%;"></a>
     </footer>
        
 </body>

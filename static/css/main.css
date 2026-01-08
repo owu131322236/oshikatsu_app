@@ -16,7 +16,11 @@ h1, h2, h3 {
 }
 
 /* ===== ヘッダー ===== */
-header {
+.header-sp,
+.footer-sp {
+    display: none;
+}
+.header-pc {
     background-color: white;
     color: black;
     padding: 0.5em 1em;
@@ -36,7 +40,7 @@ header {
 
 }
 
-header nav{
+.header-pc nav{
     width: 40%;
     display: flex;
     align-items: center;
@@ -44,18 +48,18 @@ header nav{
     padding: 10px;
 }
 
-header nav a {
+.header-pc nav a {
     color: rgb(125, 125, 129);
     text-decoration: none;
     font-weight: nomal;
     font-size: small;
 }
 
-header nav a:hover {
+.header-pc nav a:hover {
     text-decoration: underline;
 }
 
-header nav a.active{
+.header-pc nav a.active{
     padding: 10px;
     background-color: #fce8ef;
     color: #FF4081;
@@ -69,7 +73,7 @@ input[type="text"]{
     border-radius: 10px;
     background-color: #f3f4f7;
 }
-.header-right{
+.header-pc .header-right{
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -105,8 +109,8 @@ main {
 }
 
 /* ===== フッター ===== */
-.site-footer {
-    margin-top: 40px;
+.footer-pc {
+    margin: 50px auto;
     padding: 20px 0;
     background-color: #f1f3f5; 
     text-align: center;
@@ -142,6 +146,46 @@ button {
 
 button:hover {
     background-color: #45a049;
+}
+@media screen and (max-width: 430px) {
+/* pc用のヘッダーを消す処理 */
+.header-pc{
+    display: none;
+  }
+  /* スマホのヘッダー */
+  .header-sp{
+    visibility: visible;
+    background-color: white;
+    color: black;
+    width:100%;
+    height: 40px;
+    z-index: 50;
+    padding: 0.5em 1em;
+    top: 0;
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  /* スマホ用のフッダー（メニューバー） */
+  .footer-sp{
+    visibility: visible;
+    background-color: white;
+    color: black;
+    width:100%;
+    height: 50px;
+    z-index: 50;
+    padding: 0.5em 1em;
+    bottom: 0;
+    position: fixed;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+  main {
+    padding: 2em;
+    margin: 50px auto; /*ヘッダーとヘッダーの分の余白を確保*/
+}
 }
 
 
