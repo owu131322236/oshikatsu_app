@@ -74,3 +74,122 @@
     });
 </script>
   
+
+<!-- ===== 詳細モーダル ===== -->
+<div class="modal" id="detailModal">
+  <div class="modal-content">
+
+    <!-- 閉じるボタン -->
+    <button class="modal-close" id="closeModal">×</button>
+
+    <div class="modal-body">
+
+      <!-- 左：画像 -->
+      <div class="modal-image-area">
+        <img id="modalImage" alt="グッズ画像">
+      </div>
+
+      <!-- 右：情報 -->
+      <div class="modal-info">
+
+        <h2 id="modalName"></h2>
+
+        <!-- タグ -->
+        <div class="tags" id="modalTags"></div>
+
+        <!-- 在庫 -->
+        <p class="modal-stock" id="modalStock"></p>
+
+        <!-- 説明文（長文OK） -->
+        <div class="modal-description" id="modalDescription">
+          登録された説明文がここに表示されます。  
+          長くなった場合はスクロールできます。
+        </div>
+
+        <!-- 編集ボタン -->
+        <button class="edit-button">編集する</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ===== モーダル中身 ===== */
+.modal-content {
+  background: #fff;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ×ボタン */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* 中身レイアウト */
+.modal-body {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+}
+
+/* 左：画像 */
+.modal-image-area img {
+  width: 260px;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+/* 右：情報 */
+.modal-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-info h2 {
+  margin: 0 0 10px;
+}
+
+/* 在庫 */
+.modal-stock {
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+/* 説明文（スクロール） */
+.modal-description {
+  flex: 1;
+  overflow-y: auto;
+  background: #fff5f8;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* 編集ボタン */
+.edit-button {
+  background: #ff8fb1;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+</style>
