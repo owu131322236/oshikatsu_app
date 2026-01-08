@@ -3,11 +3,10 @@ from routes.gemini import ask_gemini
 from routes.auth import auth_bp
 from routes.items import items_bp
 from db import get_db
-
-# git-graphテスト
+# from db import get_db, close_db
 
 app = Flask(__name__)
-
+# app.teardown_appcontext(close_db)
 app.secret_key = "your_secret_key"
 app.register_blueprint(auth_bp)
 app.register_blueprint(items_bp)
@@ -22,11 +21,16 @@ def inject_user():
     icon_path = icon_row["image_path"] 
     return dict(username=session.get("username"), initial=initial, icon_path=icon_path)
 
-@app.route("/login")
-def home():
-    if "user_id" not in session:
-        return redirect("/login")
-    return redirect("/")
+# ======================
+# ログイン（DB方式）
+# ======================
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # GET：ログイン画面表示
+    if request.method == "GET":
+        if "user_id" in session:
+            return redirect("/")
+        return render_template("login.html")
 
 @app.route('/signup')
 @app.route('/signup', methods=['GET', 'POST'])
@@ -56,18 +60,107 @@ def signup():
 
     return render_template("signup.html",icons=icons)
 
+    # # POST：ログイン処理
+    # username = request.form.get("username", "")
+    # password = request.form.get("password", "")
+
+    # db = get_db()
+    # user = db.execute(
+    #     "SELECT id, username, password FROM users WHERE username = ?",
+    #     (username,)
+    # ).fetchone()
+
+    # if user is None:
+    #     return jsonify({
+    #         "status": "error",
+    #         "message": "ユーザー名が存在しません"
+    #     }), 401
+
+    # if password != user["password"]:
+    #     return jsonify({
+    #         "status": "error",
+    #         "message": "パスワードが違います"
+    #     }), 401
+
+    # # ログイン成功
+    # session["user_id"] = user["id"]        # ← DBのid（整数）
+    # session["username"] = user["username"]
+
+    # return jsonify({"status": "success"})
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "GET":
+        # ログイン済みならトップへ
+        if "user_id" in session:
+            return redirect("/")
+        return render_template("register.html")
+
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    confirm = request.form.get("confirm_password", "")
+
+    if not username or not password:
+        return jsonify({"status": "error", "message": "ユーザー名とパスワードは必須です"}), 400
+
+    if password != confirm:
+        return jsonify({"status": "error", "message": "パスワードが一致しません"}), 400
+
+    db = get_db()
+
+    # 同じユーザー名があるかチェック
+    exists = db.execute(
+        "SELECT id FROM users WHERE username = ?",
+        (username,)
+    ).fetchone()
+
+    if exists is not None:
+        return jsonify({"status": "error", "message": "そのユーザー名は既に使われています"}), 400
+
+    # 登録
+    db.execute(
+        "INSERT INTO users (username, password) VALUES (?, ?)",
+        (username, password)
+    )
+    db.commit()
+
+    # 登録したユーザーでログイン状態にする
+    user = db.execute(
+        "SELECT id, username FROM users WHERE username = ?",
+        (username,)
+    ).fetchone()
+
+    session["user_id"] = user["id"]
+    session["username"] = user["username"]
+
+    return jsonify({"status": "success"})
+
+
+# ログアウト
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
+
+
+# ======================
+# ログイン必須ページ
+# ======================
 @app.route("/")
 def index():
     if "user_id" not in session:
         return redirect("/login")
     return render_template("index.html")
 
+
 @app.route("/upload", methods=["POST"])
 def upload():
+    if "user_id" not in session:
+        return jsonify({"status": "error", "message": "ログインしてください"}), 401
     return ask_gemini(request)
-
 @app.route('/items/create')
 def item_creare():
+
     if "user_id" not in session:
         return redirect("/login")
     return render_template("item_new.html")
@@ -78,13 +171,12 @@ def item_search():
         return redirect("/login")
     return render_template("item_search.html")
 
-# POSTに関するルート
 @app.route('/account/edit', methods=['GET', 'POST'])
 def account_edit():
     if "user_id" not in session:
         return redirect("/login")
     db = get_db()
-    user_id = session.get("user_id")
+    user_id = session['user_id']
     icons = db.execute("SELECT id, image_path FROM icons").fetchall()
     user = db.execute("SELECT username, email, icon_id FROM users WHERE id = ?", (user_id,)).fetchone()
     if request.method == 'POST':
@@ -97,12 +189,10 @@ def account_edit():
         new_password = request.form.get('new_password')
         password_confirm = request.form.get('confirm_password')
 
+        # パスワード変更
         if new_password or password_confirm:
             if not current_password:
-                return jsonify({
-                    "status": "error",
-                    "message": "現在のパスワードを入力してください"
-                })
+                return jsonify({"status": "error", "message": "現在のパスワードを入力してください"})
 
             row = db.execute(
                 'SELECT password FROM users WHERE id = ?',
@@ -110,16 +200,10 @@ def account_edit():
             ).fetchone()
 
             if not row or current_password != row['password']:
-                return jsonify({
-                    "status": "error",
-                    "message": "現在のパスワードが間違っています"
-                })
+                return jsonify({"status": "error", "message": "現在のパスワードが間違っています"})
 
             if new_password != password_confirm:
-                return jsonify({
-                    "status": "error",
-                    "message": "パスワードが一致しません"
-                })
+                return jsonify({"status": "error", "message": "パスワードが一致しません"})
 
             db.execute(
                 'UPDATE users SET password = ? WHERE id = ?',
@@ -130,6 +214,7 @@ def account_edit():
                 'UPDATE users SET icon_id = ? WHERE id = ?',
                 (icon, user_id)
             )
+
         if username:
             db.execute(
                 'UPDATE users SET username = ? WHERE id = ?',
@@ -142,7 +227,6 @@ def account_edit():
             )
 
         db.commit()
-
         return jsonify({"status": "success"})
     
     return render_template('account_edit.html',

@@ -49,8 +49,20 @@
 
     <button type="submit">更新する</button>
   </form>
+
 </div>
-<div id="message"></div>
+
+<div id="message" style="margin-top: 10px;"></div>
+
+<div class="form-container logout-box">
+    <h3>ログアウト</h3>
+    <a href="/logout"
+       style="display:inline-block; padding:10px 14px; background:#aaa; color:white; border-radius:4px; text-decoration:none;">
+        ログアウトする
+    </a>
+</div>
+
+
 <style>
   .form-container {
     background-color: #ffffff;
@@ -187,5 +199,140 @@
       });
     });
   });
+//     .form-container{
+//         background-color: white;
+//         display: flex;
+//         flex-direction: column;
+//         gap: 12px;
+//         border-radius: 5px;
+//         padding: 15px;
+//         margin: 15px 0;
+//     }
+//     form{
+//         display: flex;
+//         flex-direction: column;
+//         gap: 12px;
+//     }
+//     label{
+//         display: flex;
+//         flex-direction: column;
+//         gap: 6px;
+//     }
+//     input, button{
+//         padding: 10px;
+//         border: 1px solid #ccc;
+//         border-radius: 4px;
+//         font-size: 16px;
+//     }
+//     button{
+//         background: #FF4081;
+//         color: white;
+//         cursor: pointer;
+//         border: none;
+//     }
+//     button:disabled{
+//         opacity: 0.7;
+//         cursor: not-allowed;
+//     }
+//     .toast {
+//     position: fixed;
+//     top: -60px;
+//     left: 50%;
+//     transform: translateX(-50%);
+//     background-color: #323232;
+//     color: white;
+//     padding: 14px 24px;
+//     border-radius: 6px;
+//     font-size: 14px;
+//     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+//     opacity: 0;
+//     transition: all 0.4s ease;
+//     z-index: 9999;
+// }
+
+// .toast.show {
+//     top: 20px;
+//     opacity: 1;
+// }
+
+// .toast.success {
+//     background-color: #4CAF50;
+// }
+
+// .toast.error {
+//     background-color: #F44336;
+// }
+
+// /* ログアウトは少し下に離す */
+// .logout-box {
+//     margin-top: 40px;   /* ← ここで距離調整 */
+// }
+
+// .logout-box {
+//     margin-top: 40px;     /* 上の余白（すでにあればそのまま） */
+//     margin-bottom: 60px;  /* ← 下の余白を追加 */
+// }
+
+// </style>
+
+// <script>
+// function showToast(message, type="success") {
+//     const toast = $("#toast");
+//     toast
+//       .removeClass("success error")
+//       .addClass(type)
+//       .text(message)
+//       .addClass("show");
+
+//     setTimeout(() => {
+//         toast.removeClass("show");
+//     }, 3000);
+// }
+
+// $(function(){
+//   $("form").on("submit", function(event){
+//     event.preventDefault();
+
+//     const $form = $(this);
+//     const type = $form.data("type"); // username or password
+//     const $button = $form.find("button");
+
+//     $button.prop("disabled", true).text("更新中…");
+
+//     $.ajax({
+//       type: "POST",
+//       url: "/account/edit",
+//       data: $form.serialize(),
+//       dataType: "json",
+
+//       success: function(response){
+//         if(response.status === "success"){
+//           if(type === "username"){
+//             showToast("ユーザー名を更新しました", "success");
+//           } else if(type === "password"){
+//             showToast("パスワードを更新しました", "success");
+//             $form.find("input[type='password']").val("");
+//           }
+//         } else {
+//           showToast(response.message || "更新に失敗しました", "error");
+//         }
+//       },
+
+//       error: function(xhr){
+//         if (xhr.responseJSON && xhr.responseJSON.message) {
+//           showToast(xhr.responseJSON.message, "error");
+//         } else {
+//           showToast("アカウント情報の更新に失敗しました", "error");
+//         }
+//       },
+
+//       complete: function(){
+//         $button.prop("disabled", false).text("更新する");
+//       }
+//     });
+//   });
+// });
 </script>
+
+
 {% endblock %}
