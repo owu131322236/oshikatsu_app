@@ -1,33 +1,53 @@
 {%extends "base.html"%} {%block content%}
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=sort" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=filter_alt" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=sort"
+/>
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=filter_alt"
+/>
 <!-- ここの内側にbodyの中身をお願いします！！ -->
- <div id="header-message">
-  <small style="color: #ff4ea9;">ーDASHBOARD</small>
+<div id="header-message">
+  <small style="color: #ff4ea9">ーDASHBOARD</small>
   <h1>
-    こんにちは、 
-    <span style="background: linear-gradient(90deg, #ff4ea9 0%, #ff5162 60%, #ff4444 80%);
-                 -webkit-background-clip: text; 
-                 -webkit-text-fill-color: transparent;">
+    こんにちは、
+    <span
+      style="
+        background: linear-gradient(
+          90deg,
+          #ff4ea9 0%,
+          #ff5162 60%,
+          #ff4444 80%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      "
+    >
       {{ username }}さん
     </span>
   </h1>
   <small>
     現在のコレクションに
-    <span style="font-weight: bold;">{{ items | length }}</span>
+    <span style="font-weight: bold">{{ items | length }}</span>
     点のアイテムが登録されています
   </small>
 </div>
 <div class="filter-overall">
   <div id="category-filters">
-    <img src="/static/images/icons/filter.svg" alt="カテゴリーアイコン" width="24" height="24" />
+    <img
+      src="/static/images/icons/filter.svg"
+      alt="カテゴリーアイコン"
+      width="24"
+      height="24"
+    />
     <div id="category-right">
       <small>カテゴリー</small>
       <div id="category-select-wrapper">
         <select name="category">
           <option>全てのアイテム</option>
           {%for category in categories%}
-              <option class="category-options">{{category.name}}</option>
+          <option class="category-options">{{category.name}}</option>
           {%endfor%}
         </select>
         <span class="arrow">⌄</span>
@@ -36,7 +56,12 @@
   </div>
   <div class="sort-controls">
     <div id="sort">
-      <img src="/static/images/icons/sort.svg" alt="並び替えアイコン" width="24" height="24" />
+      <img
+        src="/static/images/icons/sort.svg"
+        alt="並び替えアイコン"
+        width="24"
+        height="24"
+      />
       <select name="sort">
         <option value="newest">新しい順</option>
         <option value="num_items_desc">個数が多い順</option>
@@ -50,7 +75,7 @@
 <section class="goods-list" id="goodsList">
   {% include "components/item_list.html" %}
 </section>
-<div id="modalOverlay" class="overlay hidden"></div>
+<div id="modalOverlay"></div>
 
 <script>
   const cards = Array.from(document.querySelectorAll(".card"));
@@ -60,32 +85,44 @@
       console.error("itemIdがありません");
       return;
     }
-    $("#modalOverlay").removeClass("hidden");
     $("#modalOverlay").load(`/items/${itemId}/modal`); //ajaxで操作
-    $(document).on("click", "#modalOverlay", function (e) {
-      if (e.target.id === "modalOverlay") {
-        $(this).addClass("hidden").empty();
+    $("#modalOverlay").load(`/items/${itemId}/modal`, function () {
+      requestAnimationFrame(() => {
+        $("#modalOverlay").addClass("is-open");
+      });
+    });
+
+    $(document).on("pointerup", "#modalOverlay", "#closeModal", function (e) {
+      if (e.target.id === "modalOverlay" || e.target.id ==="closeModal") {
+        if (window.innerWidth <= 430) {
+          $(".modal").css("transform", "translateY(100%)");
+          setTimeout(() => {
+            $(this).removeClass("is-open").empty();
+          }, 350);
+        } else { //PCの場合
+          $(this).removeClass("is-open").empty();
+        }
       }
     });
   });
-  $("#sort select").on("change", function(){
+  $("#sort select").on("change", function () {
     const sortValue = $(this).val();
-    const categoryValue = $("#category-select-wrapper select").val()
+    const categoryValue = $("#category-select-wrapper select").val();
     $.ajax({
       url: "/",
       type: "GET",
       data: {
         sort: sortValue,
-        category: categoryValue
+        category: categoryValue,
       },
-      success: function(response){
+      success: function (response) {
         $("#goodsList").html(response);
       },
-      error: function(xhr, status, error){
+      error: function (xhr, status, error) {
         console.error("読み込みに失敗しました:", error);
-      }
-    })
-  })
+      },
+    });
+  });
   $("#category-select-wrapper select").on("change", function () {
     const categoryValue = $(this).val();
     const sortValue = $("#sort select").val();
@@ -94,16 +131,16 @@
       type: "GET",
       data: {
         sort: sortValue,
-        category: categoryValue
+        category: categoryValue,
       },
-      success: function(response){
+      success: function (response) {
         $("#goodsList").html(response);
       },
-      error: function(xhr, status, error){
+      error: function (xhr, status, error) {
         console.error("読み込みに失敗しました:", error);
-      }
-    })
-  })
+      },
+    });
+  });
 </script>
 
 <style>
@@ -131,7 +168,7 @@
     gap: 10px;
     padding: 10px;
     width: 260px;
-    background-color: #F3F4F6;
+    background-color: #f3f4f6;
     border-radius: 12px;
     border: 1px solid #eee;
   }
@@ -143,10 +180,10 @@
     flex: 1;
   }
   #category-right small {
-    font-size:8px;
+    font-size: 8px;
     color: #666;
   }
-/* カテゴリーセレクトのオプション選択部分 */
+  /* カテゴリーセレクトのオプション選択部分 */
   #category-select-wrapper {
     position: relative;
     display: flex;
@@ -163,10 +200,10 @@
     appearance: none;
   }
   #category-select-wrapper select:focus {
-  outline: none;
-  box-shadow: none;
-  border-color: #ccc;
-}
+    outline: none;
+    box-shadow: none;
+    border-color: #ccc;
+  }
   #category-select-wrapper .arrow {
     color: #aaa;
     pointer-events: none;
@@ -186,7 +223,7 @@
     border-radius: 12px;
     border: 1px solid #eee;
   }
-  #sort select{
+  #sort select {
     flex: 1;
     border: none;
     background: transparent;
@@ -196,11 +233,11 @@
     appearance: none;
   }
   #sort select:focus {
-  outline: none;
-  box-shadow: none;
-  border-color: #ccc;
-}
-  .view_confy{
+    outline: none;
+    box-shadow: none;
+    border-color: #ccc;
+  }
+  .view_confy {
     background-color: #fce8ef;
     border-radius: 10px;
     padding: 4px;
@@ -208,7 +245,6 @@
     height: 24px;
     color: #ff5f9e;
   }
-  
 
   /* ===== グッズ一覧 ===== */
   .goods-list {
@@ -301,19 +337,237 @@
     background-color: #ff5f9e;
   }
   #modalOverlay {
-  position: fixed;
-  inset: 0;                
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  width: 100%;
-  height: 100%;
-  justify-content: center; 
-  align-items: center;     
-  z-index: 1000;
-}
-#modalOverlay.hidden {
-  display: none;
-}
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    visibility: hidden;
+  }
+  #modalOverlay.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+  @media screen and (max-width: 430px) {
+    .hidden {
+      display: none;
+    }
+    /* ===== ヘッダーメッセージ ===== */
+    #header-message {
+      margin: 20px;
+    }
+    /* ===== 検索部分全体 =====*/
+    .filter-overall {
+      display: flex;
+      justify-content: space-between;
+      background-color: white;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    /* ===== カテゴリーセレクト部分 ===== */
+    #category-filters {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      width: 260px;
+      background-color: #f3f4f6;
+      border-radius: 12px;
+      border: 1px solid #eee;
+    }
+    /* カテゴリーの右側部分 */
+    #category-right {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    #category-right small {
+      font-size: 8px;
+      color: #666;
+    }
+    /* カテゴリーセレクトのオプション選択部分 */
+    #category-select-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #category-select-wrapper select {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    #category-select-wrapper select:focus {
+      outline: none;
+      box-shadow: none;
+      border-color: #ccc;
+    }
+    #category-select-wrapper .arrow {
+      color: #aaa;
+      pointer-events: none;
+    }
+    /* ===== 並び替え部分 ===== */
+    .sort-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #sort {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      width: 160px;
+      border-radius: 12px;
+      border: 1px solid #eee;
+    }
+    #sort select {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    #sort select:focus {
+      outline: none;
+      box-shadow: none;
+      border-color: #ccc;
+    }
+    .view_confy {
+      background-color: #fce8ef;
+      border-radius: 10px;
+      padding: 4px;
+      width: 24px;
+      height: 24px;
+      color: #ff5f9e;
+    }
+
+    /* ===== グッズ一覧 ===== */
+    .goods-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    /* ===== カード ===== */
+    .card {
+      background-color: white;
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .card img {
+      width: 100%;
+      height: 140px; /* 画像サイズ統一 */
+      object-fit: cover; /* はみ出し防止 */
+      border-radius: 10px;
+    }
+
+    .card h2 {
+      font-size: 15px;
+      margin: 8px 0 4px;
+    }
+
+    .card p {
+      font-size: 13px;
+      margin: 3px 0;
+    }
+
+    /* ===== ボトムナビ ===== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: #ffffff;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid #ddd;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ===== タグ ===== */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 6px;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background-color: #ffe1ec;
+      color: #ff5f9e;
+    }
+
+    /* ===== チェックボックス ===== */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .filters label {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    .filters input {
+      display: none;
+    }
+
+    .filters input:checked + span {
+      color: white;
+      background-color: #ff5f9e;
+    }
+    #modalOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 1;
+      visibility: hidden;
+      transition: opacity 0.2s ease;
+    }
+    #modalOverlay.is-open {
+      opacity: 1;
+      visibility: visible;
+    }
+    #modalOverlay.is-open .modal {
+      transform: translateY(0);
+      transition-delay: 0.15s;
+    }
+  }
 </style>
 <!-- ここまでです！！ -->
 {%endblock%}
