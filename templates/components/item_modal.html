@@ -6,14 +6,17 @@
     <div class="modal-body">
       <!-- 左：画像 -->
       <div class="modal-image-area">
-        <img src="{{ url_for('static', filename='images/' ~ item.image_path) }}" alt="">
+        <img
+          src="{{ url_for('static', filename='images/' ~ item.image_path) }}"
+          alt=""
+        />
       </div>
 
       <!-- 右：情報 -->
       <div class="modal-info">
         <div class="tags">
           {% for category in item.categories %}
-            <span class="tag">#{{ category }}</span>
+          <span class="tag">#{{ category }}</span>
           {% endfor %}
         </div>
         <h2>{{ item.name }}</h2>
@@ -21,6 +24,7 @@
         <p>キャラクター名：{{ item.character_name }}</p>
         <p>{{ item.description }}</p>
         <p>在庫：{{ item.quantity }}</p>
+
         <button id="edit-button">編集する</button>
         <button id="delete-button">削除する</button>
       </div>
@@ -29,36 +33,39 @@
 </div>
 <style>
   /* .modal-content {
-    background: #fff;
-    width: 90%;
-    max-width: 800px;
-    max-height: 85vh;
-    border-radius: 16px;
-    padding: 20px;
     position: relative;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   } */
   .modal {
-      background-color: white;
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 700px;
-      margin: 50px auto;
-    }
+    position: relative;
+    background-color: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 700px;
+    margin: 50px auto;
+  }
   .modal-close {
     position: absolute;
     top: 10px;
     right: 14px;
-    font-size: 22px;
+    font-size: 20px;
+    text-align: center;
     background: none;
     border: none;
     cursor: pointer;
+    color: rgb(70, 70, 70);
+  }
+  .modal-close:hover{
+    background: rgb(197, 197, 197);
   }
 
   /* 中身レイアウト */
   .modal-body {
+    margin-top: 20px; /*クローズボタン分下げる*/
     display: flex;
     gap: 20px;
     height: 100%;
@@ -79,21 +86,24 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    align-items: center;
+    gap: 10px;
+  }
+  /* 編集ボタン */
+  .modal-info button {
+    background: #ff5689;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    width: 80%;
+    padding: 10px;
+    font-size: 14px;
+    cursor: pointer;
   }
   /* 在庫 */
   .modal-stock {
     font-weight: bold;
     margin: 10px 0;
-  }
-  /* 編集ボタン */
-  .modal button {
-    background: #ff5689;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    padding: 10px;
-    font-size: 14px;
-    cursor: pointer;
   }
   .tags {
     margin-top: 12px;
@@ -114,26 +124,71 @@
     font-size: 16px;
     margin: 8px 0;
   }
+
+  @media screen and (max-width: 430px) {
+    .modal {
+      position: fixed;
+      bottom: 0;
+      background-color: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      height: auto;
+      margin: 0;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(.25,.8,.25,1);
+      will-change: transform;
+    }
+    #modalOverlay.is-open .modal {
+      transform: translateY(0);
+    }
+    /* 中身レイアウト */
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      height: 100%;
+    }
+
+    /*画像 */
+    .modal-image-area img {
+      border-radius: 10px;
+      width: 260px;
+      height: auto;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+
+    /* 情報 */
+    .modal-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      align-items: center;
+      gap: 4px;
+    }
+  }
 </style>
 <script>
-  $("#edit-button").click(function() {
-        window.location.href = "/items/{{ item.id }}/edit";
-    });
-    $("#delete-button").click(function() {
-        if (confirm("本当に削除しますか？")) {
-            $.ajax({
-                url: "/items/{{ item.id }}/delete",
-                type: "POST",
-                success: function(response) {
-                    location.reload();
-                },
-                error: function(xhr) {
-                    alert("削除に失敗しました。");
-                }
-            });
-        }
-    });
+  $("#edit-button").click(function () {
+    window.location.href = "/items/{{ item.id }}/edit";
+  });
+  $("#delete-button").click(function () {
+    if (confirm("本当に削除しますか？")) {
+      $.ajax({
+        url: "/items/{{ item.id }}/delete",
+        type: "POST",
+        success: function (response) {
+          location.reload();
+        },
+        error: function (xhr) {
+          alert("削除に失敗しました。");
+        },
+      });
+    }
+  });
 </script>
-<style>
-
-</style>
+<style></style>
