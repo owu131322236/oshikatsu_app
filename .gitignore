@@ -18,7 +18,7 @@ env/
 # データベース
 *.db
 *.sqlite3
-schema.sql
+setup/schema.sql
 
 # もろもろ
 uploaded.png
