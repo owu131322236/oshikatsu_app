@@ -3,6 +3,8 @@ from routes.gemini import ask_gemini
 from routes.auth import auth_bp
 from routes.items import items_bp
 from db import get_db
+import atexit
+import os
 # from db import get_db, close_db
 
 app = Flask(__name__)
@@ -10,6 +12,20 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key"
 app.register_blueprint(auth_bp)
 app.register_blueprint(items_bp)
+
+DB_PATH = "setup/app.db"
+UNUSED_DB_PATH = "app.db"
+if os.path.exists(DB_PATH):
+    os.remove(DB_PATH)
+    print(f"{DB_PATH} を削除しました（起動時）")
+def cleanup():
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+        print(f"{DB_PATH} を削除しました")
+    if os.path.exists(UNUSED_DB_PATH):
+        os.remove(UNUSED_DB_PATH)
+        print(f"{UNUSED_DB_PATH} を削除しました")
+atexit.register(cleanup)
 
 @app.context_processor
 def inject_user():
