@@ -122,16 +122,8 @@ def item_seach():
 @items_bp.route("/items/<int:item_id>/modal", methods=["GET"])
 def item_modal(item_id):
     db= get_db()
-    sql = f"""
-        SELECT items.id, items.name, items.quantity, items.image_path,
-               GROUP_CONCAT(categories.name) AS categories
-        FROM items
-        JOIN item_categories ON items.id = item_categories.item_id
-        JOIN categories ON categories.id = item_categories.category_id
-        WHERE {where_clause}
-        GROUP BY items.id
-        ORDER BY {order_by}
-    """
+    item_row = db.execute(
+        """SELECT items.id, items.name, items.description, items.quantity, items.image_path, items.work_title, items.character_name, GROUP_CONCAT(categories.name) AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE items.id = ? GROUP BY items.id""", (item_id,)).fetchone()
     if not item_row:
         return "Not Found", 404
     item = {
@@ -144,8 +136,10 @@ def item_modal(item_id):
         "character_name": item_row["character_name"],
         "categories": item_row["categories"].split(",") if item_row["categories"] else []
     }
-    return render_template("components/item_modal.html", item=item)
-    
+    return render_template(
+        "components/item_modal.html",
+        item=item
+    )
 @items_bp.route('/items/create', methods=['GET'])
 def item_create_form():
     db = get_db()
