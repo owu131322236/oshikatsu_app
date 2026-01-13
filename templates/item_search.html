@@ -1,6 +1,206 @@
 {%extends "base.html"%}
 {%block content%}
 <!-- ここの内側にbodyの中身をお願いします！！ -->
-<p>中身をここに書きます</p>
+<center>
+    <form method="post" action="#" enctype="multipart/form-data">
+        <input type="text" id="keyword" name="keyword" placeholder="作品名、キャラ名、グッズの種類を入力">
+
+        <button type="button" id="cam">📷カメラを起動</button>
+        <dialog>
+            <video id="camera" autoplay muted></video>
+            <input type="button" id="batsu" value="×"><br>
+            <button type="button" id="satsuei">撮影</button>
+        </dialog>
+
+        <div class="preview-box" id="dropZone">
+            <div id="emptyState">
+                <input type="file" id="file" name="file" accept="images/*"><br>
+                <img id="img" height="300" style="display: none;"><br><!-- ここに、アップロードされた画像がプレビュー表示される -->
+                <canvas id="myCanvas" style="display: none;"></canvas><br>
+            </div>
+        </div>
+
+        <button type="submit" id="kensaku">検索</button>
+    </form>
+    <hr>
+    <div id="result"></div><!-- ここに検索結果の一覧が入る -->
+</center>
+
+<script>
+    var canvas = document.getElementById('myCanvas');
+	var video  = document.getElementById('camera');
+    var dialog = document.querySelector('dialog');
+
+    $('#cam').text("📷カメラを起動");
+
+    //カメラが起動できたかのフラグ
+    var localMediaStream = null;
+     
+    $(document).ready(function() {
+        $('#cam').on('click', function(){
+            dialog.showModal();
+
+            ///////以下、Webカメラを取り扱う処理
+            video.setAttribute("width", 400);
+            video.setAttribute("height", 300);
+
+            //カメラ使えるかチェック
+            var hasGetUserMedia = function() {
+                return (navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia ||
+                        navigator.mozGetUserMedia || navigator.msGetUserMedia);
+            };
+
+            //エラー
+            var onFailSoHard = function(e) {
+                console.log('カメラを利用できません!', e);
+                alert("カメラを利用できません! " + e);
+                dialog.close();
+            };
+
+            if(!hasGetUserMedia()) {
+                alert("お使いのブラウザでは、カメラ機能はお使いいただけません。"); // 非対応であることを通知
+            } else {
+                window.URL = window.URL || window.webkitURL;
+                navigator.getUserMedia  = navigator.getUserMedia ||
+                                navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||
+                                navigator.msGetUserMedia;
+                navigator.getUserMedia({video: true}, function(stream) {
+                        //video.src = window.URL.createObjectURL(stream);//Chrome以外の場合
+                        video.srcObject = stream; //Chromeの場合
+                        localMediaStream = stream;
+                }, onFailSoHard);
+            }
+        });
+    });
+
+    $('#batsu').on('click', function(){
+        if(localMediaStream){
+            localMediaStream.getTracks().forEach(function(track){ track.stop(); });
+            video.srcObject = null;
+        }
+        dialog.close();
+    });
+
+    const ctx = canvas.getContext("2d");
+    var base64Data;
+    $('#satsuei').on('click', function(){            
+        // canvasのサイズ設定
+        canvas.width = video.videoWidth * 0.7;
+        canvas.height = video.videoHeight * 0.7;
+
+        // videoの映像をcanvasに描画し、プレビュー表示
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        $('#myCanvas').show();
+        $('#file').hide();
+
+        // DBに画像の生データを送る用の変数
+        var imageData = canvas.toDataURL("image/jpeg");
+        base64Data = imageData.replace(/^data:image\/png;base64,/, "");
+
+        // // Canvasの画像を「ファイルデータ」に変換して、img要素に入れる
+        // canvas.toBlob(function(blob) { // toBlob: Canvasの絵をデータ(Blob)に変換する機能。
+        //     // Blobデータを元に「画像ファイル」を生成
+        //     const date = new Date();
+        //     const year = date.getFullYear();
+        //     const month = date.getMonth() + 1;
+        //     const day = date.getDate();
+        //     const time = date.getTime();
+
+        //     const capFile = new File([blob], "./images/captured_" + year + month + day + time + ".jpg", { type: "image/jpeg" });
+
+        //     // データを運ぶための箱（DataTransfer）を作る
+        //     const dt = new DataTransfer();
+        //     dt.items.add(capFile); // 箱にファイルを入れる
+
+        //     // img要素にファイルをセット
+        //     $('#file').files = dt.files;
+        //     console.log("画像ファイルをセットしました！", dt.files); // 確認用ログ
+        // }, 'image/jpeg'); // JPEG形式で保存
+
+
+        // 撮影したら自動で閉じる
+        if(localMediaStream){
+            localMediaStream.getTracks().forEach(function(track){ track.stop(); });
+            video.srcObject = null;
+        }
+        dialog.close();
+        $('#cam').text("撮り直す");
+    });
+
+    $('#file').on('change', function() { // アップロードした画像のプレビュー表示
+        //1. 指定されたファイルを選択
+        const input = $('#file').get(0).files[0]; // 読み込んだファイルの情報を変数に入れている。
+        
+        //2．ファイル読み込み：準備
+        const reader = new FileReader();
+        
+        //5．エラー処理
+        $(reader).on('error',function () {
+            alert("読み取り時にエラーが発生しました。");
+        });
+        
+        //4．ファイルの読み込みに成功したら、ファイルの枠に表示
+        $(reader).on('load', function() {
+            $('#file').hide();
+            $('#img').show();
+            $('#img').attr('src', reader.result);
+
+            // DBに画像のデータを送る用の変数
+            var imageData = canvas.toDataURL("image/jpeg");
+            base64Data = imageData.replace(/^data:image\/png;base64,/, "");
+        });
+
+        //3．ファイル読み込み：ファイルの内容（中身）を、DataURL形式（画像の形式）で取得する（読み取る）関数を使う。
+        reader.readAsDataURL(input);
+        $('#cam').hide();
+    });
+
+    $('#kensaku').on('click', function(){
+		var keyword = $('#keyword').val();
+        var txt = "これは推し活グッズです。この画像が何のグッズなのか、作品名とキャラクター名、グッズの種類（例、缶バッジなど）を教えてください。";
+
+        // サーバーに送信
+        $.ajax({
+            type: 'POST',
+            url: 'upload',  // サーバー側のurl
+            data: {
+                "imgurl": base64Data, "prompt": encodeURIComponent(txt)
+            },
+            success: function(response) {
+            	//ここに自分のプログラムを記述する！！
+            	//サーバーからの返答が変数responseに入っている
+                $('#result').html(response);
+            },
+            error: function() {
+                alert('失敗しました');
+            }
+        });
+    });
+</script>
+
+<style>
+    dialog {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        padding: 20px;
+        text-align: center;
+        max-width: 90%;
+    }
+    /* ポップアップの後ろの背景を暗くする */
+    dialog::backdrop {
+        background: rgba(0, 0, 0, 0.6);
+    }
+    .preview-box {
+        border: 2px dashed rgba(0, 0, 0, 0.06);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+    }
+    .preview-box img {
+        max-width: 100%;
+        border-radius: 6px;
+    }
+</style>
 <!-- ここまでです！！ -->
 {%endblock%}
