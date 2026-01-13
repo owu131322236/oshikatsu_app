@@ -1,0 +1,235 @@
+<!-- signup.html -->
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>サインアップ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/static/css/signup.css" />
+  </head>
+  <body>
+    <div class="signup-container">
+      <h1>新規アカウント作成</h1>
+      <p class="subtitle">はじめての方はこちらから登録してください</p>
+
+      <form method="post" action="/signup">
+        <div class="icon-selection">
+          <p>アイコン</p>
+          <div class="icons">
+            {% for icon in icons %}
+            <label>
+              <input type="radio" name="icon" value="{{ icon.id }}" {% if
+              icon.id ==selected_icon %}checked{% endif %} />
+              <img
+                src="{{ url_for('static', filename='images/icons/' ~ icon.image_path) }}"
+                alt="アイコン{{ icon.id }}"
+              />
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="username">ユーザー名</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+        <div class="form-group">
+          <label for="email">メールアドレス</label>
+          <input type="text" id="email" name="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">パスワード</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <div class="form-group">
+            <label for="password">パスワード（確認）</label>
+            <input type="password" id="password_confirm" name="password_confirm" required />
+        </div>
+
+        <button type="submit" class="btn-submit">登録する</button>
+      </form>
+
+      <p class="login-link">
+        すでにアカウントをお持ちですか？
+        <a href="/login">ログイン</a>
+      </p>
+    </div>
+    <script>
+      $("form").on("submit", function () {
+        const icon_id = $("input[name='icon']:checked").val();
+        const username = $("#username").val();
+        const email = $("#email").val();
+        const password = $("#password").val();
+        const password_confirm = $("#password_confirm").val();
+        $.ajax({
+          type: "POST",
+          url: "/signup",
+          data: {
+            icon: icon_id,
+            username: username,
+            email: email,
+            password: password,
+            password_confirm: password_confirm,
+          },
+          dataType: "json",
+          success: function (response) {
+            if (response.status === "success") {
+              messageArea.css("color", "green").text(response.message);
+              setTimeout(function () {
+                window.location.href = "/login";
+              }, 1500);
+            } else {
+              messageArea.css("color", "red").text(response.message);
+            }
+          },
+          error: function (xhr, status, error) {
+            let messageArea = $("#signupMessage");
+            if (messageArea.length === 0) {
+              messageArea = $("<div id='signupMessage'></div>");
+              $("form").prepend(messageArea);
+            }
+            messageArea.css("color", "red").text("通信エラーが発生しました");
+            console.error(error);
+          },
+        });
+      });
+    </script>
+    <style>
+      .subtitle {
+        text-align: center;
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 24px;
+      }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f5f6f8;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .signup-container {
+        background: #ffffff;
+        padding: 36px 32px;
+        width: 100%;
+        max-width: 400px;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .signup-container h1 {
+        text-align: center;
+        margin-bottom: 8px;
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .subtitle {
+        text-align: center;
+        font-size: 13px;
+        color: #777;
+        margin-bottom: 28px;
+      }
+      .icon-selection p {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        color: #333;
+      }
+
+      .icons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .icons label {
+        cursor: pointer;
+        display: block;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        padding: 4px;
+        transition: border 0.2s;
+      }
+
+      .icons input[type="radio"] {
+        display: none;
+      }
+
+      .icons input[type="radio"]:checked + img {
+        border-radius: 50%;
+        border: 2px solid #4f46e5;
+      }
+
+      .icons img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        transition: transform 0.2s;
+      }
+
+      .icons img:hover {
+        transform: scale(1.1);
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        color: #333;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 11px 12px;
+        font-size: 14px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #4f46e5;
+      }
+
+      .btn-submit {
+        width: 100%;
+        padding: 12px;
+        margin-top: 8px;
+        background: #4f46e5;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .btn-submit:hover {
+        background: #4338ca;
+      }
+
+      .login-link {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 12px;
+        color: #666;
+      }
+
+      .login-link a {
+        color: #4f46e5;
+        text-decoration: none;
+      }
+
+      .login-link a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </body>
+</html>

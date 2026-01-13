@@ -1,56 +1,12 @@
 import sqlite3
 import os
+import atexit
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "app.db")
 
 def init_db():
-    db_path = os.path.join(os.path.dirname(__file__), "app.db")
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA foreign_keys = ON;")
-
-    with open("schema.sql", "r", encoding="utf-8") as f:
-        cursor.executescript(f.read())
-
-    # 状態テーブル
-    cursor.executemany(
-        "INSERT OR IGNORE INTO categories (id, name) VALUES(?, ?)",
-        [
-            (1, "アクリルスタンド"),
-            (2, "缶バッジ"),
-            (3, "キーホルダー"),
-            (4, "フィギュア"),
-        ]
-    )
-    #初期テーブル
-    default_username = "test"
-    default_password = "test123"  
-    cursor.execute(
-        "INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)",
-        (default_username, default_password)
-    )
-    cursor.executemany(
-        "INSERT OR IGNORE INTO items (id, user_id, name, image_path) VALUES(?, ?, ?, ?)",
-        [
-            (1, 1, "アクスタA", "boy_keychain.png"),
-            (2, 1, "フィギュアA", "girl_figure.png"),
-            (3, 1, "フィギュアB", "blue_figure.png"),
-            (4, 1, "フィギュアC", "white_figure.png"),
-            (5, 1, "ぱしゃこれ(かふか)", "kafuka_photo.png"),
-            (6, 1, "ぱしゃこれ(なぎ)", "mikoto_photo.png"),
-        ]
-        
-    )
-    cursor.executemany(
-        "INSERT OR IGNORE INTO item_categories (item_id, category_id) VALUES (?, ?)",
-        [
-            (1, 1),
-            (2, 4),
-            (3, 4),
-            (4, 4),
-            (5, 2),
-            (6, 2),
-        ]
-    )
-    conn.commit()
+    conn = sqlite3.connect(DB_PATH)
     conn.close()
     print("DB初期化完了: db.sqlite3 が作成されました")
 

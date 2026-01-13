@@ -6,7 +6,7 @@ from db import get_db
 items_bp = Blueprint('items', __name__)
 
 @items_bp.route("/", methods=["GET"])
-def item_search():
+def item_list():
     user_id = session.get("user_id")
     db = get_db()
     sort = request.args.get("sort") or "newest"
@@ -47,6 +47,59 @@ def item_search():
 
     return render_template("index.html", items=items, categories=categories)
 
+@items_bp.route('/items/search/results', methods=["GET"])
+def item_seach():
+    db=get_db()
+    user_id = session.get("user_id")
+    sort = request.args.get("sort") or "newest"
+    selected_category = request.args.get("category")
+    selected_keyword = request.args.get("keyword")
+    selected_quantity = request.args.get("quantity")
+
+    if sort == "newest":
+        order_by = "items.id DESC"
+    elif sort == "num_items_desc":
+        order_by = "items.quantity DESC"
+    elif sort == "num_items_asc":
+        order_by = "items.quantity ASC"
+    else:
+        order_by = "items.name DESC"
+
+    categories = db.execute("SELECT name FROM categories").fetchall()
+
+    conditions = ["items.user_id = ?"]
+    params = [user_id]
+
+    if selected_category and selected_category != "全てのアイテム":
+        conditions.append("categories.name = ?")
+        params.append(selected_category)
+    if selected_keyword:
+        conditions.append("(items.name LIKE ? OR items.description LIKE ?)")
+        params.extend([
+            f"%{selected_keyword}%",
+            f"%{selected_keyword}%"
+        ])
+    if selected_quantity == "in":
+        conditions.append("items.quantity > 0")
+    elif selected_quantity == "out":
+        conditions.append("items.quantity = 0")
+
+    where_clause = " AND ".join(conditions)
+
+    sql=f"""SELECT items.id, items.name, items.quantity, items.image_path, GROUP_CONCAT(categories.name) AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE {where_clause} GROUP BY items.id ORDER BY {order_by}"""
+    item_rows = db.execute(sql, params).fetchall()
+
+    items=[]
+    for item_row in item_rows:
+        items.append({
+            "id": item_row["id"],
+            "name": item_row["name"],
+            "quantity": item_row["quantity"],
+            "image_path": item_row["image_path"],
+            "categories": item_row["categories"].split(",") if item_row["categories"] else []
+        })
+    return render_template("components/item_list.html", items=items)
+
 
 @items_bp.route("/items/<int:item_id>/modal", methods=["GET"])
 def item_modal(item_id):
@@ -69,7 +122,7 @@ def item_modal(item_id):
         "components/item_modal.html",
         item=item
     )
-@items_bp.route('/item/create', methods=['GET'])
+@items_bp.route('/items/create', methods=['GET'])
 def item_create_form():
     db = get_db()
     categories = db.execute("SELECT * FROM categories").fetchall()

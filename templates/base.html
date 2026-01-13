@@ -4,24 +4,30 @@
     <meta charset="UTF-8">
     <title>推し活アプリ</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <!-- ヘッダー -->
-    <header>
+    <!-- PC用ヘッダー -->
+    <header class="header-pc">
         <div id="logo-section">
             <img src="{{ url_for('static', filename='images/demo_logo.png') }}" alt="ロゴ" id="logo">
             <h3>推し活アプリ</h3>
         </div>
         <nav>
             <a href="/" class="{% if request.path == '/'%}active{%endif%}">ホーム</a>
-            <!-- <a href="/item/create" class="{% if request.path == '/item/create'%}active{%endif%}">登録</a> -->
+            <!-- <a href="/items/create" class="{% if request.path == '/items/create'%}active{%endif%}">登録</a> -->
             <a href="/items/search" class="{% if request.path == '/items/search'%}active{%endif%}">検索</a>
         </nav>
         <div class="header-right">
-            <button type="button" id="item-button" onclick="location.href='/item/create'">+アイテムを追加</button>
-            <a href="/account/edit" id="myicon">{{ initial }}</a>
+            <button type="button" id="item-button" onclick="location.href='/items/create'">+アイテムを追加</button>
+            <a href="/account/edit" id="myicon"><img src="{{ url_for('static', filename='images/icons/' ~ icon_path) }}"  style="width:50px; height:50px; border-radius:50%;"></a>
         </div>
+    </header>
+    <!-- スマホ用ヘッダー -->
+    <header class="header-sp">
+        <img src="{{ url_for('static', filename='images/demo_logo.png') }}" alt="ロゴ" id="logo">
     </header>
 
     <!-- メインコンテンツ -->
@@ -29,10 +35,24 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- フッター -->
-    <footer>
-        <p>© 2025 Team Oshikatsu</p>
+    <!-- フッター(PCもスマホも) -->
+    <footer class="footer-pc">
+        <div class="footer-content">
+          <p>&copy; 2026 Oshikatsu App</p>
+          <nav class="footer-nav">
+            <a href="#">利用規約</a>
+            <a href="#">プライバシーポリシー</a>
+            <a href="#">お問い合わせ</a>
+          </nav>
+        </div>
     </footer>
-    
+    <!-- メニューバーなどのフッダー -->
+    <footer class="footer-sp">
+        <a href="/" class="{% if request.path == '/'%}active{%endif%}">ホーム</a>
+        <a href="/items/search" class="{% if request.path == '/items/search'%}active{%endif%}">検索</a>
+        <a href="/items/create" class="{% if request.path == '/items/search'%}active{%endif%}">検索</a>
+        <a href="/account/edit" id="myicon"><img src="{{ url_for('static', filename='images/icons/' ~ icon_path) }}"  style="width:50px; height:50px; border-radius:50%;"></a>
+    </footer>
+       
 </body>
 </html>

@@ -1,78 +1,242 @@
-
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>推し活アプリ</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <form method="post" id="loginForm">
-        <input name="username" type="username" placeholder="ユーザー名">
-        <input name="password" type="password" placeholder="パスワード">
-        <button type="submit">ログイン</button>
-    </form>
-    <div id="error" style="color: red; margin-top: 10px;"></div>
+  </head>
+  <body>
+    <header id="header-sp">
+      <img
+        src="{{ url_for('static', filename='images/demo_logo.png') }}"
+        alt="ロゴ"
+        id="logo"
+      />
+      <h3>推し活アプリ</h3>
+    </header>
+    <div id="content">
+      <img
+        src="{{ url_for('static', filename='images/goods_collection.jpg') }}"
+        alt="ロゴ"
+        id="hero-image"
+      />
+      <div id="sentence-content">
+        <header id="header-pc">
+          <img
+            src="{{ url_for('static', filename='images/demo_logo.png') }}"
+            alt="ロゴ"
+            id="logo"
+          />
+          <h3>推し活アプリ</h3>
+        </header>
+        <h1>推しグッズをスマートに管理</h1>
+        <small>増えがちな推しグッズを、分かりやすくまとめて管理できます</small>
+        <form method="post" id="loginForm">
+          <input name="username" type="text" placeholder="メールアドレス" />
+          <input name="password" type="password" placeholder="パスワード" />
+          <button type="submit">ログイン</button>
+        </form>
+        <small>アカウントをお持ちでない方はこちら</small>
+        <div style="text-align: center; margin-top: 10px">
+          <a href="/signup">新規登録</a>
+        </div>
+
+        <div id="error" style="color: red; margin-top: 10px"></div>
+      </div>
+    </div>
 
     <style>
-        @import url('https://fonts.googleapis.com/css?family=Noto+Sans+JP');
+      @import url("https://fonts.googleapis.com/css?family=Noto+Sans+JP");
+      @import url('https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;700;800&amp;display=swap" rel="stylesheet');
+      @import url("https://fonts.googleapis.com/css2?family=Source+Han+Sans+JP:wght@400;700;900&display=swap");
 
+      body {
+        font-family: "Spline Sans", "sans-serif";
+        background-color: #f3f4f6;
+        color: #333;
+      }
+      #header-pc {
+        visibility: visible;
+      }
+      #header-sp {
+        display: none;
+      }
+      #header-pc {
+        display: flex;
+        justify-content: start;
+        align-items: center;
+        width: 100%;
+        height: 70px;
+      }
+      #content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        text-align: center;
+        gap: 50px;
+      }
+      * {
+        box-sizing: border-box; /*paddingを含めたサイズ計算を行うため*/
+      }
+      #hero-image {
+        height: 100vh;
+        width: 50vw;
+        object-fit: cover;
+      }
+      #sentence-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+      }
+      #loginForm {
+        width: 80%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 30px;
+      }
+      #loginForm input {
+        width: 100%;
+        padding: 10px;
+        border-color: #bababa;
+        border-radius: 6px;
+        background-color: white;
+        outline: none;
+        box-shadow: none;
+      }
+      #loginForm button {
+        color: white;
+        background-color: #4f46e5;
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 500;
+        width: 100%;
+        padding: 15px;
+      }
+      #error {
+        font-size: 14px;
+        text-align: center;
+      }
+      a {
+        color: #ff4081;
+        font-weight: bold;
+      }
+      @media screen and (max-width: 430px) {
         body {
-            font-family: 'Noto Sans JP', sans-serif;
-            margin: 0;
-            padding: 100px;
-            background-color: #F3F4F6;
-            color: #333;
+          padding: 0;
+          font-family: "Noto Sans JP", sans-serif;
+          margin: 0;
+          background-color: #f7f7fa;
+          color: #333;
         }
-        form {
-            display: flex;
-            flex-direction: column;
-            width: 500px;
-            margin: auto auto;
+        #header-pc {
+          display: none;
         }
-        input, button {
-            padding: 0.5em;
-            margin: 0.3em 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
+        #header-sp {
+          visibility: visible;
+          display: flex;
+          justify-content: start;
+          align-items: center;
+          width: 100%;
+          height: 60px;
         }
-        button{
-            color: white;
-            background-color: #FF4081;
+        #content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 10px;
         }
-        #error {
-            font-size: 14px;
-            text-align: center;
-
-        }   
+        #sentence-content {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 10px;
+        }
+        #loginForm {
+          gap: 10px;
+        }
+        #loginForm input {
+          width: 100%;
+          padding: 10px;
+          border-color: #bababa;
+          border-radius: 12px;
+          background-color: white;
+          outline: none;
+          box-shadow: none;
+        }
+        #loginForm button {
+          color: white;
+          background-color: #4f46e5;
+          cursor: pointer;
+          width: 100%;
+          border-radius: 15px;
+          padding: 13px;
+        }
+        .hero {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        #hero-image {
+          height: auto;
+          width: 90%;
+          border-radius: 12px;
+        }
+        h1 {
+          font-family: "Source Han Sans JP", sans-serif;
+          font-size: 23px;
+          font-weight: bold;
+          letter-spacing: 0.02em;
+          margin: 20px;
+        }
+        small {
+          font-size: 12px;
+          color: #666;
+        }
+      }
     </style>
+
     <script>
-        console.log("AJAX loaded"); 
-        $(function(){
-            $("#loginForm").on("submit", function(event){
-                event.preventDefault();
+      console.log("AJAX loaded");
+      $(function () {
+        $("#loginForm").on("submit", function (event) {
+          event.preventDefault();
 
-                const formData = $(this).serialize(); //シリアライズでフォームのデータを取得
+          const formData = $(this).serialize();
 
-                $.ajax({
-                    type: "POST",
-                    url: "/login",
-                    data: formData,
-                    dataType: "json",
-                    success: function(response){
-                        if(response.status === "success"){
-                            window.location.href = "/"; 
-                        } else {
-                            $("#error").text(response.message); 
-                        }
-                    },
-                    error:function(){
-                        $("#error").text("サーバーエラーが発生しました");
-                    }
-                })
-            })
-        })
+          $.ajax({
+            type: "POST",
+            url: "/login",
+            data: formData,
+            dataType: "json",
+            success: function (response) {
+              if (response.status === "success") {
+                window.location.href = "/";
+              } else {
+                $("#error").text(response.message || "ログインに失敗しました");
+              }
+            },
+            error: function (xhr) {
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                $("#error").text(xhr.responseJSON.message);
+              } else {
+                $("#error").text("サーバーエラーが発生しました");
+              }
+            },
+          });
+        });
+      });
     </script>
-</body>
+  </body>
+</html>
