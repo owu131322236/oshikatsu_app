@@ -10,7 +10,9 @@
   {% endif %}
 
   <div class="card">
-    <form id="itemForm" method="post" action="/items/create" enctype="multipart/form-data">
+<form id="itemForm" method="post"
+  action="{% if mode == 'edit' %}/items/{{ item.id }}/update{% else %}/items/create{% endif %}"
+  enctype="multipart/form-data">t/form-data">
       <div class="grid">
         <!-- 画像 -->
         <div>
@@ -20,7 +22,8 @@
           <div class="preview-box" id="dropZone">
             <div id="emptyState">
               <p class="small">画像を選択してください</p>
-              <input type="file" id="imageInput" name="image_file" accept="image/*" required/>
+              <input type="file" id="imageInput" name="image_file" accept="image/*"
+                {% if mode == "create" %}required{% endif %} />
             </div>
             <div id="previewArea" style="display: none">
               <img id="previewImage" />
@@ -62,11 +65,17 @@
 
           <div class="input-row">
             <label>カテゴリー</label>
-            <select name="category" size="6">
+            <select name="category" size="6" required>
               {% for category in categories %}
-                <option>{{ category.name }}</option>
-                {% endfor %}
-              <option>その他</option>
+                <option
+                  {% if mode == "edit" and item and item.category == category.name %}selected{% endif %}
+                  {% if mode == "create" and category.name == "アクリルスタンド" %}selected{% endif %}
+                >{{ category.name }}</option>
+              {% endfor %}
+              <option {% if mode == "create" %}selected{% endif %}
+                      {% if mode == "edit" and item and item.category == "その他" %}selected{% endif %}>
+                その他
+              </option>
             </select>
           </div>
 
@@ -77,7 +86,7 @@
 
           <div class="input-row">
             <label>詳細</label>
-            <textarea name="description" value="{{ item.description if item else ''}}"></textarea>
+            <textarea name="description">{{ item.description if item is defined and item.description else '' }}</textarea>
           </div>
 
           <div class="actions">
@@ -97,7 +106,7 @@
     const itemData = new FormData(this);
 
     $.ajax({
-        url: "/items/create",
+        url: $(this).attr("action"),
         type: "POST",
         data: itemData,
 
@@ -111,6 +120,30 @@
                 $("#result").css("color", "red").html(xhr.responseJSON.errors.join("<br>"));
             }
         }
+    });
+  });
+  $("#imageInput").on("change", function () {
+    const file = this.files && this.files[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+
+    // emptyState を隠して previewArea を表示
+    $("#emptyState").hide();
+    $("#previewArea").show();
+
+    // プレビュー画像を差し替え
+    $("#previewImage").attr("src", url);
+
+    // ファイル名など表示したければ
+    $("#imageInfo").text(file.name);
+
+    // 編集時に上に出ている「現在の画像」を隠す
+    $("#current-img").hide();
+
+    // メモリ解放
+    $("#previewImage").on("load", function () {
+      URL.revokeObjectURL(url);
     });
   });
 </script>
@@ -208,6 +241,9 @@
     max-width: 200px;
     margin-bottom: 12px;
   }
+    #clearImage {
+  display: none;
+}
 </style>
 <!-- ここまでです！！ -->
 {%endblock%}
