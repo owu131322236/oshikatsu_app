@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, request, redirect, session, jsonify
+from flask import Blueprint, render_template, request, session, jsonify
 from werkzeug.utils import secure_filename
 from db import get_db
 
@@ -7,7 +7,7 @@ items_bp = Blueprint('items', __name__)
 
 @items_bp.route("/", methods=["GET"])
 def item_list():
-    user_id = session.get("user_id")
+    user_id = session.get("user_id") or 1
     db = get_db()
     sort = request.args.get("sort") or "newest"
     selected_category = request.args.get("category")
@@ -30,7 +30,16 @@ def item_list():
         category_condition = " AND categories.name = ?"
         params.append(selected_category)
 
-    sql=f"""SELECT items.id, items.name, items.quantity, items.image_path, GROUP_CONCAT(categories.name) AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE items.user_id = ? {category_condition} GROUP BY items.id ORDER BY {order_by}"""
+    sql = f"""
+        SELECT items.id, items.name, items.quantity, items.image_path,
+               GROUP_CONCAT(categories.name) AS categories
+        FROM items
+        JOIN item_categories ON items.id = item_categories.item_id
+        JOIN categories ON categories.id = item_categories.category_id
+        WHERE items.user_id = ? {category_condition}
+        GROUP BY items.id
+        ORDER BY {order_by}
+    """
     item_rows = db.execute(sql, params).fetchall()
 
     items=[]
@@ -49,8 +58,8 @@ def item_list():
 
 @items_bp.route('/items/search/results', methods=["GET"])
 def item_seach():
-    db=get_db()
-    user_id = session.get("user_id")
+    db = get_db()
+    user_id = session.get("user_id") or 1
     sort = request.args.get("sort") or "newest"
     selected_category = request.args.get("category")
     selected_keyword = request.args.get("keyword")
@@ -86,7 +95,16 @@ def item_seach():
 
     where_clause = " AND ".join(conditions)
 
-    sql=f"""SELECT items.id, items.name, items.quantity, items.image_path, GROUP_CONCAT(categories.name) AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE {where_clause} GROUP BY items.id ORDER BY {order_by}"""
+    sql = f"""
+        SELECT items.id, items.name, items.quantity, items.image_path,
+               GROUP_CONCAT(categories.name) AS categories
+        FROM items
+        JOIN item_categories ON items.id = item_categories.item_id
+        JOIN categories ON categories.id = item_categories.category_id
+        WHERE {where_clause}
+        GROUP BY items.id
+        ORDER BY {order_by}
+    """
     item_rows = db.execute(sql, params).fetchall()
 
     items=[]
@@ -104,8 +122,16 @@ def item_seach():
 @items_bp.route("/items/<int:item_id>/modal", methods=["GET"])
 def item_modal(item_id):
     db= get_db()
-    item_row = db.execute(
-        """SELECT items.id, items.name, items.description, items.quantity, items.image_path, items.work_title, items.character_name, GROUP_CONCAT(categories.name) AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE items.id = ? GROUP BY items.id""", (item_id,)).fetchone()
+    sql = f"""
+        SELECT items.id, items.name, items.quantity, items.image_path,
+               GROUP_CONCAT(categories.name) AS categories
+        FROM items
+        JOIN item_categories ON items.id = item_categories.item_id
+        JOIN categories ON categories.id = item_categories.category_id
+        WHERE {where_clause}
+        GROUP BY items.id
+        ORDER BY {order_by}
+    """
     if not item_row:
         return "Not Found", 404
     item = {
@@ -118,10 +144,8 @@ def item_modal(item_id):
         "character_name": item_row["character_name"],
         "categories": item_row["categories"].split(",") if item_row["categories"] else []
     }
-    return render_template(
-        "components/item_modal.html",
-        item=item
-    )
+    return render_template("components/item_modal.html", item=item)
+    
 @items_bp.route('/items/create', methods=['GET'])
 def item_create_form():
     db = get_db()
@@ -132,13 +156,15 @@ def item_create_form():
 @items_bp.route("/items/create", methods=["POST"])
 def item_create():
     db = get_db()
-    user_id = session.get("user_id")
+    user_id = session.get("user_id") or 1
 
     name = request.form.get("name")
-    quantity =request.form.get("quantity", 1)
+    quantity = request.form.get("quantity", 1)
     work_title = request.form.get("work_title")
     character_name = request.form.get("character_name")
-    description = request.form.get("description")
+    description = request.form.get("description", "").strip()
+    if description == "" or description.lower() == "none":
+        description = None
     category = request.form.get("category")
     image_file = request.files.get("image_file")
 
@@ -146,6 +172,9 @@ def item_create():
     errors = []
     if not name:
         errors.append("グッズ名は必須です")
+
+    if not category or category.strip() == "":
+        errors.append("カテゴリーを選択してください")
         
     if not image_file or image_file.filename == "":
         errors.append("画像は必須です")
@@ -160,7 +189,7 @@ def item_create():
 
     save_path = os.path.join(upload_dir, filename)
     image_file.save(save_path)
-    image_path = f"{filename}"
+    image_path = filename
 
     #カテゴリーIDの取得または作成
     category_row = db.execute(
@@ -202,12 +231,16 @@ def item_edit_form(item_id):
         return "Not Found", 404
 
     category_row = db.execute(
-        """SELECT categories.name FROM categories 
-           JOIN item_categories ON categories.id = item_categories.category_id 
-           WHERE item_categories.item_id = ?""",
+        """
+        SELECT categories.name
+        FROM categories
+        JOIN item_categories ON categories.id = item_categories.category_id
+        WHERE item_categories.item_id = ?
+        """,
         (item_id,)
     ).fetchone()
     category_name = category_row["name"] if category_row else ""
+    categories = db.execute("SELECT * FROM categories").fetchall()
 
     item = {
         "id": item_row["id"],
@@ -219,12 +252,97 @@ def item_edit_form(item_id):
         "image_path": item_row["image_path"],
         "category": category_name
     }
-    return render_template("item_new.html", mode="edit", item=item)
+    return render_template("item_new.html", mode="edit", item=item, categories=categories)
 
+@items_bp.route('/items/<int:item_id>/update', methods=['POST'])
+def item_update(item_id):
+    db = get_db()
+    user_id = session.get("user_id") or 1
+
+    name = request.form.get("name")
+    quantity = request.form.get("quantity", 0)
+    work_title = request.form.get("work_title")
+    character_name = request.form.get("character_name")
+    description = request.form.get("description", "").strip()
+    if description == "" or description.lower() == "none":
+        description = None
+    category = request.form.get("category")
+    image_file = request.files.get("image_file")
+
+    errors = []
+    if not name:
+        errors.append("グッズ名は必須です")
+
+    if not category or category.strip() == "":
+        errors.append("カテゴリーを選択してください")
+
+    if quantity is None or quantity == "":
+        errors.append("個数は必須です")
+    else:
+        try:
+            if int(quantity) < 0:
+                errors.append("個数は0以上で入力してください")
+        except ValueError:
+            errors.append("個数は数字で入力してください")
+
+    if errors:
+        return jsonify({"errors": errors}), 400
+
+    old_item = db.execute(
+        "SELECT image_path FROM items WHERE id = ? AND user_id = ?",
+        (item_id, user_id)
+    ).fetchone()
+
+    if not old_item:
+        return "Not Found", 404
+
+    image_path = old_item["image_path"]
+
+    # 画像が新しく来たときだけ差し替え
+    if image_file and image_file.filename != "":
+        filename = secure_filename(image_file.filename)
+        upload_dir = os.path.join("static", "images")
+        os.makedirs(upload_dir, exist_ok=True)
+        save_path = os.path.join(upload_dir, filename)
+        image_file.save(save_path)
+        image_path = filename
+
+    # カテゴリーIDの取得 or 作成
+    category_row = db.execute(
+        "SELECT id FROM categories WHERE name = ?",
+        (category,)
+    ).fetchone()
+
+    if category_row:
+        category_id = category_row["id"]
+    else:
+        cursor = db.execute(
+            "INSERT INTO categories (name) VALUES (?)",
+            (category,)
+        )
+        category_id = cursor.lastrowid
+
+    # items 更新
+    db.execute("""
+        UPDATE items
+        SET name = ?, image_path = ?, quantity = ?, work_title = ?, character_name = ?, description = ?
+        WHERE id = ? AND user_id = ?
+    """, (name, image_path, int(quantity), work_title, character_name, description, item_id, user_id))
+
+    # item_categories 更新（1カテゴリ想定）
+    db.execute("DELETE FROM item_categories WHERE item_id = ?", (item_id,))
+    db.execute(
+        "INSERT INTO item_categories (item_id, category_id) VALUES (?, ?)",
+        (item_id, category_id)
+    )
+
+    db.commit()
+    return jsonify({"status": "success"})
+    
 @items_bp.route('/items/<int:item_id>/delete', methods=['POST'])
 def item_delete(item_id):
     db = get_db()
-    user_id = session.get("user_id")
+    user_id = session.get("user_id") or 1
 
     db.execute(
         "DELETE FROM items WHERE id = ? AND user_id = ?",
