@@ -8,7 +8,6 @@ import json
 import atexit
 import os
 import re
-# from db import get_db, close_db
 
 app = Flask(__name__)
 # app.teardown_appcontext(close_db)
@@ -16,19 +15,19 @@ app.secret_key = "your_secret_key"
 app.register_blueprint(auth_bp)
 app.register_blueprint(items_bp)
 
-DB_PATH = "setup/app.db"
-UNUSED_DB_PATH = "app.db"
-if os.path.exists(DB_PATH):
-    os.remove(DB_PATH)
-    print(f"{DB_PATH} を削除しました（起動時）")
-def cleanup():
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
-        print(f"{DB_PATH} を削除しました")
-    if os.path.exists(UNUSED_DB_PATH):
-        os.remove(UNUSED_DB_PATH)
-        print(f"{UNUSED_DB_PATH} を削除しました")
-atexit.register(cleanup)
+# DB_PATH = "setup/app.db"
+# UNUSED_DB_PATH = "app.db"
+# if os.path.exists(DB_PATH):
+#     os.remove(DB_PATH)
+#     print(f"{DB_PATH} を削除しました（起動時）")
+# def cleanup():
+#     if os.path.exists(DB_PATH):
+#         os.remove(DB_PATH)
+#         print(f"{DB_PATH} を削除しました")
+#     if os.path.exists(UNUSED_DB_PATH):
+#         os.remove(UNUSED_DB_PATH)
+#         print(f"{UNUSED_DB_PATH} を削除しました")
+# atexit.register(cleanup)
 
 def extract_json(text):
     if not text:
