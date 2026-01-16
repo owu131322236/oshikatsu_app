@@ -3,7 +3,7 @@
         data-name="{{ item.name}}"
         data-quantity="{{item.quantity}}"
         data-image="{{item.image_path}}">
-    <img src="{{ url_for('static', filename='images/' ~ item.image_path) }}" alt="{{item.name}}">
+    <img src="{{ url_for('static', filename='images/' ~ item.image_path) }}" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/no_image.jpg') }}';" alt="{{item.name}}">
     <h2>{{item.name}}</h2>
     <p>在庫：{{item.quantity}}個</p>
     {% for category in item.categories %}

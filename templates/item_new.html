@@ -12,7 +12,7 @@
   <div class="card">
 <form id="itemForm" method="post"
   action="{% if mode == 'edit' %}/items/{{ item.id }}/update{% else %}/items/create{% endif %}"
-  enctype="multipart/form-data">t/form-data">
+  enctype="multipart/form-data">
       <div class="grid">
         <!-- 画像 -->
         <div>
@@ -244,6 +244,15 @@
     #clearImage {
   display: none;
 }
+@media (max-width:430px){
+      body{padding:12px;padding-bottom:90px}
+      h1{font-size:1.3rem}
+      p.lead{font-size:0.9rem}
+      .card{padding:14px}
+      input,select,textarea{font-size:16px}
+      .actions{display:flex; flex-direction:column}
+      button{width:100%;padding:14px}
+    }
 </style>
 <!-- ここまでです！！ -->
 {%endblock%}

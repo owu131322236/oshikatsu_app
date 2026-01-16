@@ -1,206 +1,428 @@
-{%extends "base.html"%}
-{%block content%}
+{%extends "base.html"%} {%block content%}
 <!-- ここの内側にbodyの中身をお願いします！！ -->
-<center>
-    <form method="post" action="#" enctype="multipart/form-data">
-        <input type="text" id="keyword" name="keyword" placeholder="作品名、キャラ名、グッズの種類を入力">
-
-        <button type="button" id="cam">📷カメラを起動</button>
+<div class="item-search">
+    <div class="search-buttons">
+        <input
+            type="text"
+            id="keyword"
+            name="keyword"
+            placeholder="作品名、キャラ名、グッズの種類を入力"
+        />
+        <button type="button" id="key-search-pc" class="key-search">検索する</button>
+        <button type="button" id="cam-button-pc" class="cam-button">カメラを起動</button>
+        <button type="button" id="key-search-sp" class="key-search"><img src="{{ url_for('static', filename='images/icons/white-search.png') }}" style="width: 25px; height: 25px;"></button>
+        <button type="button" id="cam-button-sp" class="cam-button"><img src="{{ url_for('static', filename='images/icons/camera.png') }}" style="width: 25px; height: 25px;">カメラを起動する</button>
         <dialog>
             <video id="camera" autoplay muted></video>
-            <input type="button" id="batsu" value="×"><br>
+            <input type="button" id="batsu" value="×" /><br />
             <button type="button" id="satsuei">撮影</button>
         </dialog>
-
-        <div class="preview-box" id="dropZone">
-            <div id="emptyState">
-                <input type="file" id="file" name="file" accept="images/*"><br>
-                <img id="img" height="300" style="display: none;"><br><!-- ここに、アップロードされた画像がプレビュー表示される -->
-                <canvas id="myCanvas" style="display: none;"></canvas><br>
-            </div>
+    </div>
+    <div class="preview-box" id="dropZone">
+        <div id="emptyState">
+        <img class="empty-icon" src="{{ url_for('static', filename='images/icons/upload.png') }}" style="width: 30px; height: 30px;">
+        <p class="empty-text" style="font-weight: 800;">画像をドラッグ＆ドロップ<br></p>
+            <small class="empty-text">またはファイルを選択</small><br>
+        <button type="button" id="selected-file">ファイルを選択</button>
+        <input type="file" id="file" name="file" accept="images/*" />
+        <img id="img" height="300" style="display: none;" />
+        <canvas id="myCanvas" style="display: none;"></canvas>
         </div>
-
-        <button type="submit" id="kensaku">検索</button>
-    </form>
-    <hr>
-    <div id="result"></div><!-- ここに検索結果の一覧が入る -->
-</center>
+    </div>
+    <h3>検索結果</h3>
+    <div id="loading" style="display:none;">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    <section class="goods-list" id="goodsList">
+        {%if items%} {% include "item_list.html" %} {%endif%}
+      </section>
+      <div id="modalOverlay"></div>
+</div>
 
 <script>
-    var canvas = document.getElementById('myCanvas');
-	var video  = document.getElementById('camera');
-    var dialog = document.querySelector('dialog');
+  var canvas = document.getElementById("myCanvas");
+  var video = document.getElementById("camera");
+  var dialog = document.querySelector("dialog");
 
-    $('#cam').text("📷カメラを起動");
+  //カメラが起動できたかのフラグ
+  var localMediaStream = null;
 
-    //カメラが起動できたかのフラグ
-    var localMediaStream = null;
-     
-    $(document).ready(function() {
-        $('#cam').on('click', function(){
-            dialog.showModal();
+  $(document).ready(function () {
+    $(".cam-button").on("click", function () {
+      dialog.showModal();
 
-            ///////以下、Webカメラを取り扱う処理
-            video.setAttribute("width", 400);
-            video.setAttribute("height", 300);
+      ///////以下、Webカメラを取り扱う処理
+      video.setAttribute("width", 400);
+      video.setAttribute("height", 300);
 
-            //カメラ使えるかチェック
-            var hasGetUserMedia = function() {
-                return (navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia ||
-                        navigator.mozGetUserMedia || navigator.msGetUserMedia);
-            };
+      //カメラ使えるかチェック
+      var hasGetUserMedia = function () {
+        return (
+          navigator.mediaDevices.getUserMedia ||
+          navigator.webkitGetUserMedia ||
+          navigator.mozGetUserMedia ||
+          navigator.msGetUserMedia
+        );
+      };
 
-            //エラー
-            var onFailSoHard = function(e) {
-                console.log('カメラを利用できません!', e);
-                alert("カメラを利用できません! " + e);
-                dialog.close();
-            };
-
-            if(!hasGetUserMedia()) {
-                alert("お使いのブラウザでは、カメラ機能はお使いいただけません。"); // 非対応であることを通知
-            } else {
-                window.URL = window.URL || window.webkitURL;
-                navigator.getUserMedia  = navigator.getUserMedia ||
-                                navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||
-                                navigator.msGetUserMedia;
-                navigator.getUserMedia({video: true}, function(stream) {
-                        //video.src = window.URL.createObjectURL(stream);//Chrome以外の場合
-                        video.srcObject = stream; //Chromeの場合
-                        localMediaStream = stream;
-                }, onFailSoHard);
-            }
-        });
-    });
-
-    $('#batsu').on('click', function(){
-        if(localMediaStream){
-            localMediaStream.getTracks().forEach(function(track){ track.stop(); });
-            video.srcObject = null;
-        }
+      //エラー
+      var onFailSoHard = function (e) {
+        console.log("カメラを利用できません!", e);
+        alert("カメラを利用できません! " + e);
         dialog.close();
+      };
+
+      if (!hasGetUserMedia()) {
+        alert("お使いのブラウザでは、カメラ機能はお使いいただけません。"); // 非対応であることを通知
+      } else {
+        window.URL = window.URL || window.webkitURL;
+        navigator.getUserMedia =
+          navigator.getUserMedia ||
+          navigator.webkitGetUserMedia ||
+          navigator.mozGetUserMedia ||
+          navigator.msGetUserMedia;
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then(function (stream) {
+            video.srcObject = stream;
+            localMediaStream = stream;
+          })
+          .catch(function (err) {
+            alert("カメラを利用できません: " + err.name);
+            dialog.close();
+          });
+      }
     });
+  });
 
-    const ctx = canvas.getContext("2d");
-    var base64Data;
-    $('#satsuei').on('click', function(){            
-        // canvasのサイズ設定
-        canvas.width = video.videoWidth * 0.7;
-        canvas.height = video.videoHeight * 0.7;
+  $("#batsu").on("click", function () {
+    if (localMediaStream) {
+      localMediaStream.getTracks().forEach(function (track) {
+        track.stop();
+      });
+      video.srcObject = null;
+    }
+    dialog.close();
+  });
 
-        // videoの映像をcanvasに描画し、プレビュー表示
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        $('#myCanvas').show();
-        $('#file').hide();
+  const ctx = canvas.getContext("2d");
+  var base64Data;
+  $("#satsuei").on("click", function () {
+    // canvasのサイズ設定
+    canvas.width = video.videoWidth * 0.7;
+    canvas.height = video.videoHeight * 0.7;
 
-        // DBに画像の生データを送る用の変数
-        var imageData = canvas.toDataURL("image/jpeg");
-        base64Data = imageData.replace(/^data:image\/png;base64,/, "");
+    // videoの映像をcanvasに描画し、プレビュー表示
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    $("#myCanvas").show();
+    $("#file").hide();
+    $(".cam-button").hide();
+    $(".empty-icon").hide();
+    $(".empty-text").hide();
 
-        // // Canvasの画像を「ファイルデータ」に変換して、img要素に入れる
-        // canvas.toBlob(function(blob) { // toBlob: Canvasの絵をデータ(Blob)に変換する機能。
-        //     // Blobデータを元に「画像ファイル」を生成
-        //     const date = new Date();
-        //     const year = date.getFullYear();
-        //     const month = date.getMonth() + 1;
-        //     const day = date.getDate();
-        //     const time = date.getTime();
+    // DBに画像の生データを送る用の変数
+    var imageData = canvas.toDataURL("image/jpeg");
+    base64Data = imageData.replace(/^data:image\/jpeg;base64,/, "");
 
-        //     const capFile = new File([blob], "./images/captured_" + year + month + day + time + ".jpg", { type: "image/jpeg" });
+    // // Canvasの画像を「ファイルデータ」に変換して、img要素に入れる
+    canvas.toBlob(function (blob) {
+      // toBlob: Canvasの絵をデータ(Blob)に変換する機能。
+      // Blobデータを元に「画像ファイル」を生成
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const time = date.getTime();
 
-        //     // データを運ぶための箱（DataTransfer）を作る
-        //     const dt = new DataTransfer();
-        //     dt.items.add(capFile); // 箱にファイルを入れる
+      const capFile = new File(
+        [blob],
+        "./images/captured_" + year + month + day + time + ".jpg",
+        { type: "image/jpeg" }
+      );
 
-        //     // img要素にファイルをセット
-        //     $('#file').files = dt.files;
-        //     console.log("画像ファイルをセットしました！", dt.files); // 確認用ログ
-        // }, 'image/jpeg'); // JPEG形式で保存
+      // データを運ぶための箱（DataTransfer）を作る
+      const dt = new DataTransfer();
+      dt.items.add(capFile); // 箱にファイルを入れる
 
+      // img要素にファイルをセット
+      $("#file").files = dt.files;
+      console.log("画像ファイルをセットしました！", dt.files); // 確認用ログ
+    }, "image/jpeg"); // JPEG形式で保存
 
-        // 撮影したら自動で閉じる
-        if(localMediaStream){
-            localMediaStream.getTracks().forEach(function(track){ track.stop(); });
-            video.srcObject = null;
-        }
-        dialog.close();
-        $('#cam').text("撮り直す");
-    });
+    // 撮影したら自動で閉じる
+    if (localMediaStream) {
+      localMediaStream.getTracks().forEach(function (track) {
+        track.stop();
+      });
+      video.srcObject = null;
+    }
+    dialog.close();
+    $("#cam-button-pc").text("撮り直す");
+  });
+  document.getElementById("selected-file").addEventListener("click", function() {
+  document.getElementById("file").click();
+});
 
-    $('#file').on('change', function() { // アップロードした画像のプレビュー表示
-        //1. 指定されたファイルを選択
-        const input = $('#file').get(0).files[0]; // 読み込んだファイルの情報を変数に入れている。
-        
-        //2．ファイル読み込み：準備
-        const reader = new FileReader();
-        
-        //5．エラー処理
-        $(reader).on('error',function () {
-            alert("読み取り時にエラーが発生しました。");
-        });
-        
-        //4．ファイルの読み込みに成功したら、ファイルの枠に表示
-        $(reader).on('load', function() {
-            $('#file').hide();
-            $('#img').show();
-            $('#img').attr('src', reader.result);
+  $("#file").on("change", function () {
+    const file = this.files[0];
+    if (!file) return;
 
-            // DBに画像のデータを送る用の変数
-            var imageData = canvas.toDataURL("image/jpeg");
-            base64Data = imageData.replace(/^data:image\/png;base64,/, "");
-        });
+    const reader = new FileReader();
+    const img = new Image();
 
-        //3．ファイル読み込み：ファイルの内容（中身）を、DataURL形式（画像の形式）で取得する（読み取る）関数を使う。
-        reader.readAsDataURL(input);
-        $('#cam').hide();
-    });
+    reader.onload = function (e) {
+      img.onload = function () {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
 
-    $('#kensaku').on('click', function(){
-		var keyword = $('#keyword').val();
-        var txt = "これは推し活グッズです。この画像が何のグッズなのか、作品名とキャラクター名、グッズの種類（例、缶バッジなど）を教えてください。";
+        // ★ 正しい base64
+        base64Data = canvas
+          .toDataURL("image/jpeg")
+          .replace(/^data:image\/jpeg;base64,/, "");
 
-        // サーバーに送信
+        $("#img").attr("src", e.target.result).show();
+        $("#file").hide();
+        $(".cam-button").hide();
+        $(".empty-icon").hide();
+        $(".empty-text").hide();
+      };
+      img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  $(".key-search").on("click", function () {
+    const keyword = $("#keyword").val();
+    showLoading(); 
+    if(keyword){
         $.ajax({
-            type: 'POST',
-            url: 'upload',  // サーバー側のurl
-            data: {
-                "imgurl": base64Data, "prompt": encodeURIComponent(txt)
-            },
-            success: function(response) {
-            	//ここに自分のプログラムを記述する！！
-            	//サーバーからの返答が変数responseに入っている
-                $('#result').html(response);
-            },
-            error: function() {
-                alert('失敗しました');
-            }
+        url: "/items/search/results",
+        type: "GET",
+        data: {
+            keyword: keyword,
+        },
+        success: function(response){
+            $("#goodsList").html(response);
+        },
+        error: function(xhr, status, error){
+            console.error("読み込みに失敗しました:", error);
+        },
+        complete: function(){
+            hideLoading(); 
+        }
         });
-    });
+    }
+    else{
+        if (!base64Data) {
+            alert("画像がありません");
+            return;
+        }
+        $.ajax({
+        type: "POST",
+        url: "/upload",
+        contentType: "application/json",
+        data: JSON.stringify({
+            img_base64: base64Data,
+        }),
+        success: function (res) {
+            $("#goodsList").html(res);
+        },
+        error: function () {
+            alert("失敗しました");
+        },
+        complete: function(){
+            hideLoading(); 
+        }
+        });
+        
+    }
+  });
 </script>
 
 <style>
-    dialog {
-        border: none;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        padding: 20px;
-        text-align: center;
-        max-width: 90%;
+    .item-search{
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
     }
-    /* ポップアップの後ろの背景を暗くする */
-    dialog::backdrop {
-        background: rgba(0, 0, 0, 0.6);
+  .item-search input[type="text"] {
+    box-sizing: border-box; 
+    width: 60%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background-color: #fff;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #key-search-pc {
+    display: inline-block;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background-color: #ff4081;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s, transform 0.1s;
+  }
+  #cam-button-pc{
+    display: inline-block;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border:1px solid #d1d5db;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background-color: #fff;
+    color: #374151;
+    transition: background-color 0.2s, transform 0.1s;
+  }
+  #key-search-sp {
+    display: none;
+  }
+  #cam-button-sp {
+    display: none;
+  }
+  dialog {
+    box-sizing: border-box; 
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    text-align: center;
+    max-width: 90%;
+  }
+  dialog::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .preview-box {
+    box-sizing: border-box; 
+    position: relative;
+  width: 100%;
+  min-height: 260px;
+  border: 2px dotted #d0d5db;
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+}
+
+.preview-box input[type="file"] {
+  display: none; 
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+#emptyState {
+  text-align: center;
+  color: #374151;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+#selected-file {
+position: absolute;
+  padding: 10px 16px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: none;
+  background-color: #d8d9dd;
+  color: #fff;
+  cursor: pointer;
+  bottom: 0%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.preview-box img + #selected-file,
+.preview-box canvas + #selected-file {
+  top: auto;
+  bottom: 10px;
+  left: 10px;
+  transform: none;
+}
+  .preview-box img {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+  @media screen and (max-width: 430px) {
+    .search-buttons{
+        display:flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-items: center;
+        gap: 10px;
+        width: 100%;
+    }
+    #key-search-sp {
+        display: flex;
+        padding: 8px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        background-color: #ff4081;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.2s, transform 0.1s;
+    }
+    #cam-button-sp{
+        box-sizing: border-box; 
+        display: flex;
+        gap:10px;
+        width: 100%;
+        padding: 10px 10px;
+        border-radius: 8px;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+        border:1px solid #d1d5db;
+        font-size: 0.9rem;
+        cursor: pointer;
+        background-color: #fff;
+        color: #374151;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+    #key-search-pc {
+        display: none;
+    }
+    #cam-button-pc {
+        display: none;
     }
     .preview-box {
-        border: 2px dashed rgba(0, 0, 0, 0.06);
-        border-radius: 8px;
-        padding: 12px;
-        text-align: center;
-    }
-    .preview-box img {
-        max-width: 100%;
-        border-radius: 6px;
-    }
+    min-height: 100px;
+    height: auto;
+  }
+  .empty-icon{
+    display: none;
+  }
+  .preview-box{
+    position: static;
+    padding: 10px 0;
+  }
+  #selected-file {
+    position:static;
+    transform: none;
+  }
+}
 </style>
 
 <!-- 
@@ -211,7 +433,7 @@
   <option value="in">在庫あり</option>
   <option value="out">在庫なし</option>
 </select>
-<!-- <select id="sort">...</select> -->
+<select id="sort">...</select>
 <div class="sort-controls">
     <div id="sort">
       <img src="/static/images/icons/sort.svg" alt="並び替えアイコン" width="24" height="24" />
@@ -221,8 +443,8 @@
         <option value="num_items_asc">個数が少ない順</option>
       </select>
     </div>
-    <!-- <img class="view_confy" src="/static/images/icons/list_pink.svg" alt="並び替えアイコン" width="24" height="24" />
-    <img src="/static/images/icons/view_comfy_black.svg" alt="並び替えアイコン" width="24" height="24" /> -->
+    <img class="view_confy" src="/static/images/icons/list_pink.svg" alt="並び替えアイコン" width="24" height="24" />
+    <img src="/static/images/icons/view_comfy_black.svg" alt="並び替えアイコン" width="24" height="24" />
   </div>
 <button id="searchBtn">検索</button>
 <ul id="goodsList">
@@ -252,7 +474,7 @@ document.getElementById("searchBtn").addEventListener("click", function(){
         console.error("読み込みに失敗しました:", error);
       }
     })
-})
-</script> -->
+})</script>  
+-->
 <!-- ここまでです！！ -->
 {%endblock%}
