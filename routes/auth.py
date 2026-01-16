@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, session, jsonify
-from db import get_db
+from sqlalchemy import text
+from db import SessionLocal
 
 auth_bp = Blueprint('auth_bp', __name__) 
 
@@ -9,11 +10,9 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        db = get_db()
-        user = db.execute(
-            f"SELECT * FROM users WHERE username ={p} AND password = {p} ",
-            (username, password)
-        ).fetchone() #fetchoneで1件取得
+        db = SessionLocal()
+        sql = text("SELECT * FROM users WHERE username = :username AND password = :password")
+        user = db.execute(sql, {"username": username, "password": password}).fetchone()#fetchoneで1件取得
 
         if user:
             session["user_id"] = user["id"]
