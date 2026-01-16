@@ -11,7 +11,7 @@ def login():
 
         db = get_db()
         user = db.execute(
-            "SELECT * FROM users WHERE username =? AND password = ? ",
+            f"SELECT * FROM users WHERE username ={p} AND password = {p} ",
             (username, password)
         ).fetchone() #fetchoneで1件取得
 

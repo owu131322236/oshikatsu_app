@@ -3,6 +3,7 @@ from routes.chatgpt import get_chatgpt_response, build_prompt
 from routes.gemini import ask_gemini
 from routes.auth import auth_bp
 from routes.items import items_bp
+from db import sql_param
 from db import get_db
 import json
 import atexit
@@ -14,6 +15,7 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key"
 app.register_blueprint(auth_bp)
 app.register_blueprint(items_bp)
+p = sql_param()
 
 # DB_PATH = "setup/app.db"
 # UNUSED_DB_PATH = "app.db"
@@ -47,7 +49,7 @@ def inject_user():
     username = session.get("username", "None")
     initial = username[0].upper() if username else "N" 
     db = get_db()
-    icon_row = db.execute("SELECT image_path FROM icons WHERE id = ?", (icon_id,)).fetchone()
+    icon_row = db.execute(f"SELECT image_path FROM icons WHERE id = {p}", (icon_id,)).fetchone()
     icon_path = icon_row["image_path"] 
     return dict(username=session.get("username"), initial=initial, icon_path=icon_path)
 
@@ -74,7 +76,7 @@ def signup():
         password = request.form.get("password")
         password_confirm = request.form.get("password_confirm")
 
-        row = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        row = db.execute(f"SELECT id FROM users WHERE email = {p}", (email,)).fetchone()
         if row:
             return jsonify({"status": "error", "message": "すでに登録済みのメールアドレスです"})
 
@@ -82,7 +84,7 @@ def signup():
             return jsonify({"status": "error", "message": "パスワードが一致しません"})
 
         db.execute(
-            "INSERT INTO users (icon_id, username, email, password) VALUES (?, ?, ?, ?)",
+            f"INSERT INTO users (icon_id, username, email, password) VALUES ({p}, {p}, {p}, {p})",
             (icon_id, username, email, password)
         )
         db.commit()
@@ -96,7 +98,7 @@ def signup():
 
     # db = get_db()
     # user = db.execute(
-    #     "SELECT id, username, password FROM users WHERE username = ?",
+    #     f"SELECT id, username, password FROM users WHERE username = {p}",
     #     (username,)
     # ).fetchone()
 
@@ -140,7 +142,7 @@ def register():
 
     # 同じユーザー名があるかチェック
     exists = db.execute(
-        "SELECT id FROM users WHERE username = ?",
+        f"SELECT id FROM users WHERE username = {p}",
         (username,)
     ).fetchone()
 
@@ -149,14 +151,14 @@ def register():
 
     # 登録
     db.execute(
-        "INSERT INTO users (username, password) VALUES (?, ?)",
+        f"INSERT INTO users (username, password) VALUES ({p}, {p})",
         (username, password)
     )
     db.commit()
 
     # 登録したユーザーでログイン状態にする
     user = db.execute(
-        "SELECT id, username FROM users WHERE username = ?",
+        f"SELECT id, username FROM users WHERE username = {p}",
         (username,)
     ).fetchone()
 
@@ -208,7 +210,7 @@ def account_edit():
     db = get_db()
     user_id = session['user_id']
     icons = db.execute("SELECT id, image_path FROM icons").fetchall()
-    user = db.execute("SELECT username, email, icon_id FROM users WHERE id = ?", (user_id,)).fetchone()
+    user = db.execute(f"SELECT username, email, icon_id FROM users WHERE id = {p}", (user_id,)).fetchone()
     if request.method == 'POST':
         db = get_db()
         user_id = session['user_id']
@@ -225,7 +227,7 @@ def account_edit():
                 return jsonify({"status": "error", "message": "現在のパスワードを入力してください"})
 
             row = db.execute(
-                'SELECT password FROM users WHERE id = ?',
+                f"SELECT password FROM users WHERE id = {p}",
                 (user_id,)
             ).fetchone()
 
@@ -236,23 +238,23 @@ def account_edit():
                 return jsonify({"status": "error", "message": "パスワードが一致しません"})
 
             db.execute(
-                'UPDATE users SET password = ? WHERE id = ?',
+                f"UPDATE users SET password = {p} WHERE id = {p}",
                 (new_password, user_id)
             )
         if icon:
             db.execute(
-                'UPDATE users SET icon_id = ? WHERE id = ?',
+                f"UPDATE users SET icon_id = {p} WHERE id = {p}",
                 (icon, user_id)
             )
 
         if username:
             db.execute(
-                'UPDATE users SET username = ? WHERE id = ?',
+                f"UPDATE users SET username = {p} WHERE id = {p}",
                 (username, user_id)
             )
         if email:
             db.execute(
-                'UPDATE users SET email = ? WHERE id = ?',
+                f"UPDATE users SET email = {p} WHERE id = {p}",
                 (email, user_id)
             )
 
@@ -316,14 +318,14 @@ def upload():
 
     # --- category（OR条件の1つ） ---
     if valid_kw(category):
-        where.append("categories.name = ?")
+        where.append(f"categories.name = {p}")
         params.append(category)
 
     # --- keywords / title / character ---
     for kw in keywords + [title, character]:
         if not valid_kw(kw):
             continue
-        where.append("(items.name LIKE ? OR items.description LIKE ?)")
+        where.append(f"(items.name LIKE {p} OR items.description LIKE {p})")
         params.extend([f"%{kw}%", f"%{kw}%"])
 
     if not where:
@@ -356,5 +358,6 @@ def upload():
     )
 
 
-if __name__ == "__main__": #起動用
-    app.run(host="0.0.0.0", port=5001, debug=True)
+if __name__ == "__main__":
+    from app import app
+    app.run(host="0.0.0.0", port=5001, debug=(os.getenv("FLASK_ENV") != "production"))

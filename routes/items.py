@@ -1,9 +1,10 @@
 import os
 from flask import Blueprint, render_template, request, session, jsonify
 from werkzeug.utils import secure_filename
-from db import get_db
+from db import get_db, sql_param
 
 items_bp = Blueprint('items', __name__)
+p = sql_param()
 
 @items_bp.route("/", methods=["GET"])
 def item_list():
@@ -27,7 +28,7 @@ def item_list():
     params = [user_id]
 
     if selected_category and selected_category != "全てのアイテム":
-        category_condition = " AND categories.name = ?"
+        category_condition = f"AND categories.name = {p}"
         params.append(selected_category)
 
     sql = f"""
@@ -36,7 +37,7 @@ def item_list():
         FROM items
         JOIN item_categories ON items.id = item_categories.item_id
         JOIN categories ON categories.id = item_categories.category_id
-        WHERE items.user_id = ? {category_condition}
+        WHERE items.user_id = {p} {category_condition}
         GROUP BY items.id
         ORDER BY {order_by}
     """
@@ -76,14 +77,14 @@ def item_seach():
 
     categories = db.execute("SELECT name FROM categories").fetchall()
 
-    conditions = ["items.user_id = ?"]
+    conditions = [f"items.user_id = {p}"]
     params = [user_id]
 
     if selected_category and selected_category != "全てのアイテム":
-        conditions.append("categories.name = ?")
+        conditions.append(f"categories.name = {p}")
         params.append(selected_category)
     if selected_keyword:
-        conditions.append("(items.name LIKE ? OR items.description LIKE ?)")
+        conditions.append(f"(items.name LIKE {p} OR items.description LIKE {p})")
         params.extend([
             f"%{selected_keyword}%",
             f"%{selected_keyword}%"
@@ -123,7 +124,7 @@ def item_seach():
 def item_modal(item_id):
     db= get_db()
     item_row = db.execute(
-        """SELECT items.id, items.name, items.description, items.quantity, items.image_path, items.work_title, items.character_name, GROUP_CONCAT(categories.name) AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE items.id = ? GROUP BY items.id""", (item_id,)).fetchone()
+        f"""SELECT items.id, items.name, items.description, items.quantity, items.image_path, items.work_title, items.character_name, GROUP_CONCAT(categories.name) AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE items.id = {p} GROUP BY items.id""", (item_id,)).fetchone()
     if not item_row:
         return "Not Found", 404
     item = {
@@ -187,27 +188,27 @@ def item_create():
 
     #カテゴリーIDの取得または作成
     category_row = db.execute(
-        "SELECT id FROM categories WHERE name = ?",
+        f"SELECT id FROM categories WHERE name = {p}",
         (category,)
     ).fetchone()
     if category_row:
         category_id = category_row["id"]
     else:
         cursor = db.execute(
-            "INSERT INTO categories (name) VALUES (?)",
+            f"INSERT INTO categories (name) VALUES ({p})",
             (category,)
         )
         category_id = cursor.lastrowid
 
     # データベースにアイテムを保存
-    cursor = db.execute("""
+    cursor = db.execute(f"""
         INSERT INTO items (user_id, name, image_path, quantity, work_title, character_name, description)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES ({p}, {p}, {p}, {p}, {p}, {p}, {p})
     """, (user_id, name, image_path, quantity, work_title, character_name, description)
     )
     item_id = cursor.lastrowid
     db.execute(
-        "INSERT INTO item_categories (item_id, category_id) VALUES (?, ?)",
+        f"INSERT INTO item_categories (item_id, category_id) VALUES ({p}, {p})",
         (item_id, category_id)
     )
 
@@ -218,18 +219,18 @@ def item_create():
 def item_edit_form(item_id):
     db = get_db()
     item_row = db.execute(
-        "SELECT * FROM items WHERE id = ?",
+        f"SELECT * FROM items WHERE id = {p}",
         (item_id,)
     ).fetchone()
     if not item_row:
         return "Not Found", 404
 
     category_row = db.execute(
-        """
+        f"""
         SELECT categories.name
         FROM categories
         JOIN item_categories ON categories.id = item_categories.category_id
-        WHERE item_categories.item_id = ?
+        WHERE item_categories.item_id = {p}
         """,
         (item_id,)
     ).fetchone()
@@ -283,7 +284,7 @@ def item_update(item_id):
         return jsonify({"errors": errors}), 400
 
     old_item = db.execute(
-        "SELECT image_path FROM items WHERE id = ? AND user_id = ?",
+        f"SELECT image_path FROM items WHERE id = {p} AND user_id = {p}",
         (item_id, user_id)
     ).fetchone()
 
@@ -303,7 +304,7 @@ def item_update(item_id):
 
     # カテゴリーIDの取得 or 作成
     category_row = db.execute(
-        "SELECT id FROM categories WHERE name = ?",
+        f"SELECT id FROM categories WHERE name = {p}",
         (category,)
     ).fetchone()
 
@@ -311,22 +312,22 @@ def item_update(item_id):
         category_id = category_row["id"]
     else:
         cursor = db.execute(
-            "INSERT INTO categories (name) VALUES (?)",
+            f"INSERT INTO categories (name) VALUES ({p})",
             (category,)
         )
         category_id = cursor.lastrowid
 
     # items 更新
-    db.execute("""
+    db.execute(f"""
         UPDATE items
-        SET name = ?, image_path = ?, quantity = ?, work_title = ?, character_name = ?, description = ?
-        WHERE id = ? AND user_id = ?
+        SET name = {p}, image_path = {p}, quantity = {p}, work_title = {p}, character_name = {p}, description = {p}
+        WHERE id = {p} AND user_id = {p}
     """, (name, image_path, int(quantity), work_title, character_name, description, item_id, user_id))
 
     # item_categories 更新（1カテゴリ想定）
-    db.execute("DELETE FROM item_categories WHERE item_id = ?", (item_id,))
+    db.execute(f"DELETE FROM item_categories WHERE item_id = {p}", (item_id,))
     db.execute(
-        "INSERT INTO item_categories (item_id, category_id) VALUES (?, ?)",
+        f"INSERT INTO item_categories (item_id, category_id) VALUES ({p}, {p})",
         (item_id, category_id)
     )
 
@@ -339,7 +340,7 @@ def item_delete(item_id):
     user_id = session.get("user_id") or 1
 
     db.execute(
-        "DELETE FROM items WHERE id = ? AND user_id = ?",
+        f"DELETE FROM items WHERE id = {p} AND user_id = {p}",
         (item_id, user_id)
     )
     db.commit()
