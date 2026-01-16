@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>推し活アプリ</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -48,9 +49,9 @@
     </footer>
     <!-- メニューバーなどのフッダー -->
     <footer class="footer-sp">
-        <a href="/" class="{% if request.path == '/'%}active{%endif%}">ホーム</a>
-        <a href="/items/search" class="{% if request.path == '/items/search'%}active{%endif%}">検索</a>
-        <a href="/items/create" class="{% if request.path == '/items/search'%}active{%endif%}">検索</a>
+        <img src="{{ url_for('static', filename='images/icons/clicked-home.png' if request.path =='/' else 'images/icons/home.png')}}" class="menu-logo" onclick="location.href='/'">
+        <img src="{{ url_for('static', filename='images/icons/clicked-search.png' if request.path =='/items/search' else 'images/icons/search.png')}}" class="menu-logo" onclick="location.href='/items/search'">
+        <img src="{{ url_for('static', filename='images/icons/clicked-add.png' if request.path == '/items/create' else 'images/icons/add.png')}}" class="menu-logo" onclick="location.href='/items/create'">
         <a href="/account/edit" id="myicon"><img src="{{ url_for('static', filename='images/icons/' ~ icon_path) }}"  style="width:50px; height:50px; border-radius:50%;"></a>
     </footer>
        

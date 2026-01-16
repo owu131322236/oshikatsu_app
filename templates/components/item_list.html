@@ -1,9 +1,11 @@
+{% if message %}
+<p class="ai-error">{{ message }}</p>
+{%else%} {% for item in items %} {% include "components/item_card.html" %} {%
+else %}
+<p>該当するアイテムがありません</p>
+{% endfor %} {%endif%}
 
-    {% for item in items %} {% include "components/item_card.html" %} {% else %}
-    <p>該当するアイテムがありません</p>
-    {% endfor %}
-  
-    <!-- 後で書く際に参考したいので残しておきます
+<!-- 後で書く際に参考したいので残しておきます
     
     <div class="card"
          data-name="ぱしゃこれ（かふか）"

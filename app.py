@@ -1,10 +1,13 @@
 from flask import Flask, request, render_template, session, redirect, jsonify
+from routes.chatgpt import get_chatgpt_response, build_prompt
 from routes.gemini import ask_gemini
 from routes.auth import auth_bp
 from routes.items import items_bp
 from db import get_db
+import json
 import atexit
 import os
+import re
 # from db import get_db, close_db
 
 app = Flask(__name__)
@@ -26,6 +29,18 @@ def cleanup():
         os.remove(UNUSED_DB_PATH)
         print(f"{UNUSED_DB_PATH} を削除しました")
 atexit.register(cleanup)
+
+def extract_json(text):
+    if not text:
+        return None
+    match = re.search(r"\{[\s\S]*\}", text)
+    return match.group(0) if match else None
+
+
+def valid_kw(s):
+    NG = ["不明", "未定義", "作品名不明", "キャラクター名不明"]
+    return s and s not in NG
+
 
 @app.context_processor
 def inject_user():
@@ -169,11 +184,11 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/upload", methods=["POST"])
-def upload():
-    if "user_id" not in session:
-        return jsonify({"status": "error", "message": "ログインしてください"}), 401
-    return ask_gemini(request)
+# @app.route("/upload", methods=["POST"])
+# def upload():
+#     if "user_id" not in session:
+#         return jsonify({"status": "error", "message": "ログインしてください"}), 401
+#     return ask_gemini(request)
 @app.route('/items/create')
 def item_creare():
 
@@ -250,6 +265,97 @@ def account_edit():
         username=user["username"],
         email=user["email"],
         selected_icon=user["icon_id"])  
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    data = request.get_json(force=True)
+    imgurl = data.get("img_base64")
+
+    if not imgurl:
+        return render_template(
+            "components/item_list.html",
+            items=[],
+            message="画像が取得できませんでした。"
+        )
+
+    db = get_db()
+
+    # --- category一覧をAIに渡す ---
+    categories = db.execute("SELECT name FROM categories").fetchall()
+    category_names = [c["name"] for c in categories]
+
+    prompt = build_prompt(category_names)
+
+    ai_raw = get_chatgpt_response(imgurl, prompt)
+    print("AI RAW:", ai_raw)
+
+    # --- JSON抽出 ---
+    json_text = extract_json(ai_raw)
+    if not json_text:
+        return render_template(
+            "components/item_list.html",
+            items=[],
+            message="画像を判別できませんでした。別の角度から撮影してみてください。"
+        )
+
+    try:
+        ai_result = json.loads(json_text)
+    except json.JSONDecodeError:
+        return render_template(
+            "components/item_list.html",
+            items=[],
+            message="画像を判別できませんでした。別の角度から撮影してみてください。"
+        )
+
+    category = ai_result.get("category")
+    keywords = ai_result.get("keywords", [])
+    title = ai_result.get("title", "")
+    character = ai_result.get("character", "")
+
+    where = []
+    params = []
+
+    # --- category（OR条件の1つ） ---
+    if valid_kw(category):
+        where.append("categories.name = ?")
+        params.append(category)
+
+    # --- keywords / title / character ---
+    for kw in keywords + [title, character]:
+        if not valid_kw(kw):
+            continue
+        where.append("(items.name LIKE ? OR items.description LIKE ?)")
+        params.extend([f"%{kw}%", f"%{kw}%"])
+
+    if not where:
+        return render_template(
+            "components/item_list.html",
+            items=[],
+            message="検索条件を生成できませんでした。"
+        )
+
+    sql = f"""
+    SELECT DISTINCT items.*
+    FROM items
+    JOIN item_categories ON items.id = item_categories.item_id
+    JOIN categories ON categories.id = item_categories.category_id
+    WHERE {" OR ".join(where)}
+    """
+
+    items = db.execute(sql, params).fetchall()
+
+    if not items:
+        return render_template(
+            "components/item_list.html",
+            items=[],
+            message="該当するアイテムが見つかりませんでした。"
+        )
+
+    return render_template(
+        "components/item_list.html",
+        items=items
+    )
+
 
 if __name__ == "__main__": #起動用
     app.run(host="0.0.0.0", port=5001, debug=True)

@@ -41,8 +41,13 @@
           <input type="password" id="password" name="password" required />
         </div>
         <div class="form-group">
-            <label for="password">パスワード（確認）</label>
-            <input type="password" id="password_confirm" name="password_confirm" required />
+          <label for="password">パスワード（確認）</label>
+          <input
+            type="password"
+            id="password_confirm"
+            name="password_confirm"
+            required
+          />
         </div>
 
         <button type="submit" class="btn-submit">登録する</button>
@@ -139,9 +144,10 @@
       }
 
       .icons {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 12px;
+        justify-items: center;
       }
 
       .icons label {
@@ -229,6 +235,15 @@
 
       .login-link a:hover {
         text-decoration: underline;
+      }
+      @media screen and (max-width: 430px) {
+        * {
+          box-sizing: border-box;
+        }
+        .signup-container {
+          width: 90%;
+          margin: 20px;
+        }
       }
     </style>
   </body>
