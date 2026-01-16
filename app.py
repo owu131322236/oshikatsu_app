@@ -3,8 +3,8 @@ from routes.chatgpt import get_chatgpt_response, build_prompt
 from routes.gemini import ask_gemini
 from routes.auth import auth_bp
 from routes.items import items_bp
-from db import sql_param
-from db import get_db
+from db import SessionLocal
+from sqlalchemy import text
 import json
 import atexit
 import os
@@ -15,7 +15,6 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key"
 app.register_blueprint(auth_bp)
 app.register_blueprint(items_bp)
-p = sql_param()
 
 # DB_PATH = "setup/app.db"
 # UNUSED_DB_PATH = "app.db"
@@ -48,8 +47,10 @@ def inject_user():
     icon_id = session.get("icon_id", 1)
     username = session.get("username", "None")
     initial = username[0].upper() if username else "N" 
-    db = get_db()
-    icon_row = db.execute(f"SELECT image_path FROM icons WHERE id = {p}", (icon_id,)).fetchone()
+    db = SessionLocal()
+    sql=text("SELECT image_path FROM icons WHERE id = :icon_id")
+    icon_row = db.execute(sql, {"icon_id": icon_id}).fetchone()
+    db.close()
     icon_path = icon_row["image_path"] 
     return dict(username=session.get("username"), initial=initial, icon_path=icon_path)
 
@@ -67,7 +68,7 @@ def login():
 @app.route('/signup')
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    db = get_db()
+    db = SessionLocal()
     icons = db.execute("SELECT id, image_path FROM icons").fetchall()
     if request.method == 'POST':
         icon_id = request.form.get("icon", 1)
@@ -75,19 +76,22 @@ def signup():
         email = request.form.get("email")
         password = request.form.get("password")
         password_confirm = request.form.get("password_confirm")
-
-        row = db.execute(f"SELECT id FROM users WHERE email = {p}", (email,)).fetchone()
+        sql= text("SELECT id FROM users WHERE email = :email")
+        row = db.execute(sql, {"email":email}).fetchone()
         if row:
+            db.close()
             return jsonify({"status": "error", "message": "すでに登録済みのメールアドレスです"})
 
         if password != password_confirm:
+            db.close()
             return jsonify({"status": "error", "message": "パスワードが一致しません"})
 
         db.execute(
-            f"INSERT INTO users (icon_id, username, email, password) VALUES ({p}, {p}, {p}, {p})",
-            (icon_id, username, email, password)
+            text("""INSERT INTO users (icon_id, username, email, password) VALUES (:icon_id, :username, :email, :password)"""),
+            {"icon_id":icon_id, "username":username, "email":email, "password":password}
         )
         db.commit()
+        db.close()
         return render_template("index.html",icons=icons)
 
     return render_template("signup.html",icons=icons)
@@ -96,11 +100,9 @@ def signup():
     # username = request.form.get("username", "")
     # password = request.form.get("password", "")
 
-    # db = get_db()
-    # user = db.execute(
-    #     f"SELECT id, username, password FROM users WHERE username = {p}",
-    #     (username,)
-    # ).fetchone()
+    # db = SessionLocal()
+    #sql=text("SELECT id, username, password FROM users WHERE username = :username")
+    # user = db.execute(sql, {"username": username}).fetchone()
 
     # if user is None:
     #     return jsonify({
@@ -138,32 +140,26 @@ def register():
     if password != confirm:
         return jsonify({"status": "error", "message": "パスワードが一致しません"}), 400
 
-    db = get_db()
+    db = SessionLocal()
 
     # 同じユーザー名があるかチェック
-    exists = db.execute(
-        f"SELECT id FROM users WHERE username = {p}",
-        (username,)
-    ).fetchone()
+    check_user_sql=text("SELECT id FROM users WHERE username = :username")
+    existing_user = db.execute(check_user_sql,{"username":username}).fetchone()
 
-    if exists is not None:
+    if existing_user is not None:
         return jsonify({"status": "error", "message": "そのユーザー名は既に使われています"}), 400
 
     # 登録
-    db.execute(
-        f"INSERT INTO users (username, password) VALUES ({p}, {p})",
-        (username, password)
-    )
+    insert_user_sql = text("""INSERT INTO users (username, password)VALUES (:username, :password)""")
+    db.execute(insert_user_sql, {"username": username, "password": password})
     db.commit()
 
     # 登録したユーザーでログイン状態にする
-    user = db.execute(
-        f"SELECT id, username FROM users WHERE username = {p}",
-        (username,)
-    ).fetchone()
+    get_user_sql = text("SELECT id, username FROM users WHERE username = :username")
+    new_user = db.execute(get_user_sql, {"username": username}).fetchone()
 
-    session["user_id"] = user["id"]
-    session["username"] = user["username"]
+    session["user_id"] = new_user["id"]
+    session["username"] = new_user["username"]
 
     return jsonify({"status": "success"})
 
@@ -207,65 +203,63 @@ def item_search():
 def account_edit():
     if "user_id" not in session:
         return redirect("/login")
-    db = get_db()
-    user_id = session['user_id']
-    icons = db.execute("SELECT id, image_path FROM icons").fetchall()
-    user = db.execute(f"SELECT username, email, icon_id FROM users WHERE id = {p}", (user_id,)).fetchone()
+
+    db = SessionLocal()
+    current_user_id = session['user_id']
+
+    icons = db.execute(text("SELECT id, image_path FROM icons")).fetchall()
+
+    user_sql = text("SELECT username, email, icon_id FROM users WHERE id = :user_id")
+    current_user = db.execute(user_sql, {"user_id": current_user_id}).fetchone()
+
     if request.method == 'POST':
-        db = get_db()
-        user_id = session['user_id']
         icon = request.form.get('icon')
-        username = request.form.get('username')
-        email =request.form.get('email')
-        current_password = request.form.get('current_password')
+        new_username = request.form.get('username')
+        new_email = request.form.get('email')
+        current_password_input = request.form.get('current_password')
         new_password = request.form.get('new_password')
         password_confirm = request.form.get('confirm_password')
 
-        # パスワード変更
         if new_password or password_confirm:
-            if not current_password:
+            if not current_password_input:
                 return jsonify({"status": "error", "message": "現在のパスワードを入力してください"})
 
-            row = db.execute(
-                f"SELECT password FROM users WHERE id = {p}",
-                (user_id,)
-            ).fetchone()
+            pw_sql = text("SELECT password FROM users WHERE id = :user_id")
+            user_pw_row = db.execute(pw_sql, {"user_id": current_user_id}).fetchone()
 
-            if not row or current_password != row['password']:
+            if not user_pw_row or current_password_input != user_pw_row['password']:
                 return jsonify({"status": "error", "message": "現在のパスワードが間違っています"})
 
             if new_password != password_confirm:
                 return jsonify({"status": "error", "message": "パスワードが一致しません"})
 
-            db.execute(
-                f"UPDATE users SET password = {p} WHERE id = {p}",
-                (new_password, user_id)
-            )
-        if icon:
-            db.execute(
-                f"UPDATE users SET icon_id = {p} WHERE id = {p}",
-                (icon, user_id)
-            )
+            update_pw_sql = text("UPDATE users SET password = :password WHERE id = :user_id")
+            db.execute(update_pw_sql, {"password": new_password, "user_id": current_user_id})
 
-        if username:
-            db.execute(
-                f"UPDATE users SET username = {p} WHERE id = {p}",
-                (username, user_id)
-            )
-        if email:
-            db.execute(
-                f"UPDATE users SET email = {p} WHERE id = {p}",
-                (email, user_id)
-            )
+        if icon:
+            update_icon_sql = text("UPDATE users SET icon_id = :icon_id WHERE id = :user_id")
+            db.execute(update_icon_sql, {"icon_id": icon, "user_id": current_user_id})
+
+        if new_username:
+            update_username_sql = text("UPDATE users SET username = :username WHERE id = :user_id")
+            db.execute(update_username_sql, {"username": new_username, "user_id": current_user_id})
+
+        if new_email:
+            update_email_sql = text("UPDATE users SET email = :email WHERE id = :user_id")
+            db.execute(update_email_sql, {"email": new_email, "user_id": current_user_id})
 
         db.commit()
+        db.close()
         return jsonify({"status": "success"})
-    
-    return render_template('account_edit.html',
+
+    db.close()
+    return render_template(
+        'account_edit.html',
         icons=icons,
-        username=user["username"],
-        email=user["email"],
-        selected_icon=user["icon_id"])  
+        username=current_user["username"],
+        email=current_user["email"],
+        selected_icon=current_user["icon_id"]
+    )
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -279,7 +273,7 @@ def upload():
             message="画像が取得できませんでした。"
         )
 
-    db = get_db()
+    db = SessionLocal()
 
     # --- category一覧をAIに渡す ---
     categories = db.execute("SELECT name FROM categories").fetchall()
@@ -314,20 +308,26 @@ def upload():
     character = ai_result.get("character", "")
 
     where = []
-    params = []
+    params = {}
 
     # --- category（OR条件の1つ） ---
     if valid_kw(category):
-        where.append(f"categories.name = {p}")
-        params.append(category)
+        where.append("categories.name = :category")
+        params["category"] = category
 
     # --- keywords / title / character ---
-    for kw in keywords + [title, character]:
+    for i, kw in enumerate(keywords + [title, character]):
         if not valid_kw(kw):
             continue
-        where.append(f"(items.name LIKE {p} OR items.description LIKE {p})")
-        params.extend([f"%{kw}%", f"%{kw}%"])
+        # 名前付きパラメータを一意にする
+        name_param = f"kw_name_{i}"
+        desc_param = f"kw_desc_{i}"
 
+        where.append(f"(items.name LIKE :{name_param} OR items.description LIKE :{desc_param})")
+        params[name_param] = f"%{kw}%"
+        params[desc_param] = f"%{kw}%"
+
+    # SQL組み立て
     if not where:
         return render_template(
             "components/item_list.html",
@@ -343,7 +343,7 @@ def upload():
     WHERE {" OR ".join(where)}
     """
 
-    items = db.execute(sql, params).fetchall()
+    items = db.execute(text(sql), params).fetchall()
 
     if not items:
         return render_template(
