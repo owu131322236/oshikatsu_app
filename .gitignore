@@ -18,8 +18,7 @@ env/
 # データベース
 *.db
 *.sqlite3
-setup/init_db.py
-setup/schema.sql
+setup/
 
 
 # もろもろ
