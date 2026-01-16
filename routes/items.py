@@ -22,7 +22,7 @@ def item_list():
     else:
         order_by = "items.name DESC"
 
-    categories = db.execute("SELECT name FROM categories").fetchall()
+    categories = db.execute(text("SELECT name FROM categories")).mappings().all()
 
     category_condition = ""
     params = {}
@@ -33,18 +33,18 @@ def item_list():
         category_condition = f"AND categories.name = :category_name"
         params["category_name"] = selected_category
 
+    where = " AND ".join(where)
     sql = f"""
-        SELECT items.id, items.name, items.quantity, items.image_path,
-               GROUP_CONCAT(categories.name) AS categories
-        FROM items
-        JOIN item_categories ON items.id = item_categories.item_id
-        JOIN categories ON categories.id = item_categories.category_id
-        WHERE items.user_id = {" AND ".join(where)}
-        GROUP BY items.id
-        ORDER BY {order_by}
+    SELECT items.id, items.name, items.quantity, items.image_path,
+        STRING_AGG(categories.name, ',') AS categories
+    FROM items
+    JOIN item_categories ON items.id = item_categories.item_id
+    JOIN categories ON categories.id = item_categories.category_id
+    WHERE {where} GROUP BY items.id, items.name, items.quantity, items.image_path
     """
-    item_rows = db.execute(sql, params).fetchall()
 
+    item_rows = db.execute(text(sql), params).mappings().all() 
+    print(categories)
     items=[]
     for item_row in item_rows:
         items.append({
@@ -75,7 +75,7 @@ def item_search():
         "name": "items.name DESC"
     }
     order_by = order_map.get(sort, "items.id DESC")
-    categories = db.execute(text("SELECT name FROM categories")).fetchall()
+    categories = db.execute(text("SELECT name FROM categories")).mappings()
 
     conditions = ["items.user_id = :user_id"]
     params = {"user_id": user_id}
@@ -97,16 +97,16 @@ def item_search():
 
     sql = f"""
     SELECT items.id, items.name, items.quantity, items.image_path,
-           GROUP_CONCAT(categories.name) AS categories
+           STRING_AGG(categories.name, ',') AS categories
     FROM items
     JOIN item_categories ON items.id = item_categories.item_id
     JOIN categories ON categories.id = item_categories.category_id
     WHERE {where_clause}
-    GROUP BY items.id
+    GROUP BY items.id, items.name, items.quantity, items.image_path
     ORDER BY {order_by}
     """
 
-    item_rows = db.execute(text(sql), params).fetchall()
+    item_rows = db.execute(text(sql), params).mappings().all()
 
     # --- 結果整形 ---
     items = []
@@ -125,8 +125,9 @@ def item_search():
 @items_bp.route("/items/<int:item_id>/modal", methods=["GET"])
 def item_modal(item_id):
     db= SessionLocal()
-    item_row = db.execute(
-        f"""SELECT items.id, items.name, items.description, items.quantity, items.image_path, items.work_title, items.character_name, GROUP_CONCAT(categories.name) AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE items.id = {p} GROUP BY items.id""", (item_id,)).fetchone()
+    sql = text("""SELECT items.id,items.name,items.description,items.quantity,items.image_path,items.work_title,items.character_name,STRING_AGG(categories.name, ',') AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE items.id = :item_id GROUP BY items.id, items.name, items.description, items.quantity, items.image_path, items.work_title, items.character_name""")
+
+    item_row = db.execute(sql, {"item_id": item_id}).fetchone()
     if not item_row:
         return "Not Found", 404
     item = {
@@ -146,7 +147,7 @@ def item_modal(item_id):
 @items_bp.route('/items/create', methods=['GET'])
 def item_create_form():
     db = SessionLocal()
-    categories = db.execute("SELECT * FROM categories").fetchall()
+    categories = db.execute(text("SELECT name FROM categories")).fetchall()
     return render_template("item_new.html", mode="create", categories=categories)
 
 
@@ -180,7 +181,7 @@ def item_create():
     image_path = filename
 
     category_sql = text("SELECT id FROM categories WHERE name = :name")
-    category_row = db.execute(category_sql, {"name": category}).fetchone()
+    category_row = db.execute(category_sql, {"name": category}).mappings().fetchone()
 
     if category_row:
         category_id = category_row["id"]
@@ -227,7 +228,7 @@ def item_edit_form(item_id):
         JOIN item_categories ON categories.id = item_categories.category_id
         WHERE item_categories.item_id = :item_id
     """)
-    category_row = db.execute(cat_sql, {"item_id": item_id}).fetchone()
+    category_row = db.execute(cat_sql, {"item_id": item_id}).mappings().fetchone()
     category_name = category_row["name"] if category_row else ""
 
     categories = db.execute(text("SELECT * FROM categories")).fetchall()
@@ -286,7 +287,7 @@ def item_update(item_id):
         image_path = filename
 
     category_sql = text("SELECT id FROM categories WHERE name = :name")
-    category_row = db.execute(category_sql, {"name": category}).fetchone()
+    category_row = db.execute(category_sql, {"name": category}).mappings().fetchone()
     if category_row:
         category_id = category_row["id"]
     else:

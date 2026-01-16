@@ -49,7 +49,7 @@ def inject_user():
     initial = username[0].upper() if username else "N" 
     db = SessionLocal()
     sql=text("SELECT image_path FROM icons WHERE id = :icon_id")
-    icon_row = db.execute(sql, {"icon_id": icon_id}).fetchone()
+    icon_row = db.execute(sql, {"icon_id": icon_id}).mappings().fetchone()
     db.close()
     icon_path = icon_row["image_path"] 
     return dict(username=session.get("username"), initial=initial, icon_path=icon_path)
