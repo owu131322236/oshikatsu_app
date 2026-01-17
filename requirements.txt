@@ -3,6 +3,6 @@ pillow==12.0.0
 google-generativeai==0.8.5
 openai==2.15.0
 psycopg2-binary==2.9.7
-SQLAlchemy==2.0.19
 python-dotenv>=1.0.0
+SQLAlchemy>=2.0
 gunicorn==21.2.0
