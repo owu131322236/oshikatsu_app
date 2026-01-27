@@ -12,7 +12,7 @@ def login():
 
         db = SessionLocal()
         sql = text("SELECT * FROM users WHERE username = :username AND password = :password")
-        user = db.execute(sql, {"username": username, "password": password}).fetchone()#fetchoneで1件取得
+        user = db.execute(sql, {"username": username, "password": password}).mappings().first()
 
         if user:
             session["user_id"] = user["id"]

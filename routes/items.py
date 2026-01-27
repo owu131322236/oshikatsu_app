@@ -44,7 +44,6 @@ def item_list():
     """
 
     item_rows = db.execute(text(sql), params).mappings().all() 
-    print(categories)
     items=[]
     for item_row in item_rows:
         items.append({
@@ -127,7 +126,7 @@ def item_modal(item_id):
     db= SessionLocal()
     sql = text("""SELECT items.id,items.name,items.description,items.quantity,items.image_path,items.work_title,items.character_name,STRING_AGG(categories.name, ',') AS categories FROM items JOIN item_categories ON items.id = item_categories.item_id JOIN categories ON categories.id = item_categories.category_id WHERE items.id = :item_id GROUP BY items.id, items.name, items.description, items.quantity, items.image_path, items.work_title, items.character_name""")
 
-    item_row = db.execute(sql, {"item_id": item_id}).fetchone()
+    item_row = db.execute(sql, {"item_id": item_id}).mappings().fetchone()
     if not item_row:
         return "Not Found", 404
     item = {
@@ -218,7 +217,7 @@ def item_edit_form(item_id):
     db = SessionLocal()
 
     item_sql = text("SELECT * FROM items WHERE id = :item_id")
-    item_row = db.execute(item_sql, {"item_id": item_id}).fetchone()
+    item_row = db.execute(item_sql, {"item_id": item_id}).mappings().fetchone()
     if not item_row:
         return "Not Found", 404
 
@@ -273,7 +272,7 @@ def item_update(item_id):
         return jsonify({"errors": errors}), 400
 
     old_item_sql = text("SELECT image_path FROM items WHERE id = :item_id AND user_id = :user_id")
-    old_item = db.execute(old_item_sql, {"item_id": item_id, "user_id": user_id}).fetchone()
+    old_item = db.execute(old_item_sql, {"item_id": item_id, "user_id": user_id}).mappings().fetchone()
     if not old_item:
         return "Not Found", 404
 
