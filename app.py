@@ -10,6 +10,8 @@ import atexit
 import os
 import re
 
+#db.pyでenvを読み込んでいるので、ここでは不要
+
 app = Flask(__name__)
 # app.teardown_appcontext(close_db)
 app.secret_key = "your_secret_key"
