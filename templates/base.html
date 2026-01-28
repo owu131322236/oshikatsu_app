@@ -13,8 +13,8 @@
     <!-- PC用ヘッダー -->
     <header class="header-pc">
         <div id="logo-section">
-            <img src="{{ url_for('static', filename='images/demo_logo.png') }}" alt="ロゴ" id="logo">
-            <h3>推し活アプリ</h3>
+            <!-- <img src="{{ url_for('static', filename='images/demo_logo.png') }}" alt="ロゴ" id="logo"> -->
+            <h3 id="logo-title">OshiColle</h3>
         </div>
         <nav>
             <a href="/" class="{% if request.path == '/'%}active{%endif%}">ホーム</a>
@@ -33,6 +33,7 @@
 
     <!-- メインコンテンツ -->
     <main>
+        <!-- 各ページでヘッダー分下げる -->
         {% block content %}{% endblock %}
     </main>
 
