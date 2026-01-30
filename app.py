@@ -1,3 +1,12 @@
+import os
+from dotenv import load_dotenv
+
+FLASK_ENV = os.getenv("FLASK_ENV", "development")
+if FLASK_ENV == "development":
+    load_dotenv(".env.development")
+elif FLASK_ENV == "production":
+    load_dotenv(".env")
+
 from flask import Flask, request, render_template, session, redirect, jsonify
 from routes.chatgpt import get_chatgpt_response, build_prompt
 from routes.gemini import ask_gemini
